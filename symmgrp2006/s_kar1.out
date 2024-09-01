@@ -1,0 +1,218 @@
+
+(D1)            CSM$USERS:[WHEREMAN]S_KAR1.OUT;1
+
+(C2) BATCH("s_kar1.dat")$
+
+(C3) parameters:[w1,w2,s1,s2,a1,a2];
+
+(D3)                        [W1, W2, S1, S2, A1, A2]
+ 
+(C4) sublisteqs:[e1];
+
+(D4)                                  [E1]
+
+(C5) highest_derivatives:1;
+
+(D5)                                   1
+
+(C6) info_given:false;
+
+(D6)                                 FALSE
+
+(C7) warnings:true;
+
+(D7)                                  TRUE
+
+(C8) subst_deriv_of_vi:true;
+
+(D8)                                  TRUE
+
+(C9) p:4;
+
+(D9)                                   4
+
+(C10) q:3;
+
+(D10)                                  3
+
+(C11) m:3;
+
+(D11)                                  3
+
+(C12) 
+e1:u[1,[0,0,0,1]]+w1*u[1,[0,0,1,0]]+1/2*(s1*(2*u[1,[1,0,0,0]]*u[2,[1,0,0,0]]+
+   2*u[1,[0,1,0,0]]*u[2,[0,1,0,0]]+u[1]*u[2,[2,0,0,0]]+u[1]*u[2,[0,2,0,0]])+
+   s2*(2*u[1,[0,0,1,0]]*u[2,[0,0,1,0]]+u[1]*u[2,[0,0,2,0]]));
+
+(D12) U                W1 + ((U  U
+       1, [0, 0, 1, 0]         1  2, [0, 0, 2, 0]
+
+ + 2 U                U               ) S2
+      1, [0, 0, 1, 0]  2, [0, 0, 1, 0]
+
+ + (U  U                + 2 U                U
+     1  2, [2, 0, 0, 0]      1, [1, 0, 0, 0]  2, [1, 0, 0, 0]
+
+ + U  U                + 2 U                U               ) S1)/2
+    1  2, [0, 2, 0, 0]      1, [0, 1, 0, 0]  2, [0, 1, 0, 0]
+
+ + U
+    1, [0, 0, 0, 1]
+
+
+(C13) e2:u[2,[0,0,0,1]]+w1*u[2,[0,0,1,0]]-1/2*(s1*(u[1,[2,0,0,0]]/u[1]+
+   u[1,[0,2,0,0]]/u[1]-u[2,[1,0,0,0]]^2-u[2,[0,1,0,0]]^2)+
+   s2*(u[1,[0,0,2,0]]/u[1]-u[2,[0,0,1,0]]^2))+a1*u[3];
+
+                              U
+                               1, [0, 0, 2, 0]    2
+(D13) U                W1 - ((---------------- - U               ) S2
+       2, [0, 0, 1, 0]               U            2, [0, 0, 1, 0]
+                                      1
+
+                                           U                  U
+       2                  2                 1, [2, 0, 0, 0]    1, [0, 2, 0, 0]
+ + (- U                - U               + ---------------- + ----------------)
+       2, [1, 0, 0, 0]    2, [0, 1, 0, 0]          U                  U
+                                                    1                  1
+
+ S1)/2 + U  A1 + U
+          3       2, [0, 0, 0, 1]
+
+ 
+(C14) e3:u[3,[0,0,0,2]]-w2^2*(u[3,[2,0,0,0]]+u[3,[0,2,0,0]]+u[3,[0,0,2,0]])-
+   2*a2*u[1]*(u[1,[2,0,0,0]]+u[1,[0,2,0,0]]+u[1,[0,0,2,0]])-
+   2*a2*(u[1,[1,0,0,0]]^2+u[1,[0,1,0,0]]^2+u[1,[0,0,1,0]]^2);
+
+                                                                   2
+(D14) - (U                + U                + U               ) W2
+          3, [2, 0, 0, 0]    3, [0, 2, 0, 0]    3, [0, 0, 2, 0]
+
+ - 2 U  (U                + U                + U               ) A2
+      1   1, [2, 0, 0, 0]    1, [0, 2, 0, 0]    1, [0, 0, 2, 0]
+
+       2                  2                  2
+ - 2 (U                + U                + U               ) A2
+       1, [1, 0, 0, 0]    1, [0, 1, 0, 0]    1, [0, 0, 1, 0]
+
+ + U
+    3, [0, 0, 0, 2]
+
+ 
+(C15) v1:u[1,[0,0,0,1]];
+
+(D15)                           U
+                                 1, [0, 0, 0, 1]
+
+(C16) v2:u[2,[0,0,0,1]];
+
+(D16)                           U
+                                 2, [0, 0, 0, 1]
+
+(C17) v3:u[3,[0,0,0,2]];
+
+(D17)                           U
+                                 3, [0, 0, 0, 2]
+
+(C19) SYMMETRY(1,0,0)$
+
+/*********************************************************/
+
+/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */
+
+/*         CALCULATION OF THE SYMMETRY GROUP             */
+
+/*                 IN BATCH MODE                         */
+
+/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */
+
+/*         Project Supervision: P. WINTERNITZ            */
+
+/*        Version 2.0 released on May 29, 1995           */
+
+/*                   Copyright 1991                      */
+
+/*********************************************************/
+
+Using only the information from terms involving the highest
+
+derivatives, i.e. : [U               , U               , U               , 
+                      1, [0, 0, 3, 0]   1, [2, 0, 1, 0]   1, [1, 0, 2, 0]
+
+U               , U               , U               , U               , 
+ 1, [0, 2, 1, 0]   1, [0, 1, 2, 0]   1, [3, 0, 0, 0]   1, [2, 1, 0, 0]
+
+U               , U               ]
+ 1, [1, 2, 0, 0]   1, [0, 3, 0, 0]
+
+in the search for determining equations.
+
+You are using only the equation :  [E1]
+
+of the given system consisting of 3 equations in total.
+
+*** Number of determining equations before simplifications: 20 . ***
+
+                                          2
+WARNING ! We eliminated the factor:  U  S2
+                                      1
+
+                                       d            2
+which was the coefficient of  - 2 U  (--- (ETA )) S2
+                                   1  dU      4
+                                        3
+
+WARNING ! We eliminated the factor:  U  S1 S2
+                                      1
+
+                                       d
+which was the coefficient of  - 2 U  (--- (ETA )) S1 S2
+                                   1  dX      4
+                                        1
+
+                                                                         2
+List of parameters that were factored out and cancelled: [U  S1 S2, U  S2 ]
+                                                           1         1
+
+*** Number of determining equations after simplifications: 6 . ***
+
+*** These determining equations are stored in: LODE. ***
+
+(C20) PRINTEQN(LODE);
+ 
+
+              d
+Equation 1 : --- (ETA ) = 0
+             dU      4
+               3
+
+              d
+Equation 2 : --- (ETA ) = 0
+             dU      4
+               2
+
+              d
+Equation 3 : --- (ETA ) = 0
+             dU      4
+               1
+
+              d
+Equation 4 : --- (ETA ) = 0
+             dX      4
+               3
+
+              d
+Equation 5 : --- (ETA ) = 0
+             dX      4
+               1
+
+              d
+Equation 6 : --- (ETA ) = 0
+             dX      4
+               2
+
+(D20)                                 DONE
+
+(C21) CLOSEFILE();
+
+

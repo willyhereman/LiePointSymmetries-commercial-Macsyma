@@ -1,0 +1,18 @@
+
+/* ********************************************************* */
+/*                                                           */
+/*  PRINTEQN(LIST): Is a very simple function which prints   */
+/*  the elements of a list in an equation-like form.         */
+/*                                                           */
+/* ********************************************************* */
+
+FREEOFSUM(EXPR) := FREEOF("+",EXPR)$
+PRINTEQN(LIST):=BLOCK([pli,LGT:LENGTH(LIST)],
+  PRINT(" "),
+  FOR I THRU LGT DO(
+     pli : part(list,i),
+     if freeofsum(pli) then PRINT("Equation",I,":",pli=0)
+     else (print("Equation",i,":"),
+     PRINT(pli=0) ) ))$
+
+/* *********************************************************** */

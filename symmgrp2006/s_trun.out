@@ -1,0 +1,338 @@
+
+/*********************************************************/
+
+/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */
+
+/*         CALCULATION OF THE SYMMETRY GROUP             */
+
+/*                 IN BATCH MODE                         */
+
+/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */
+
+/*         Project Supervision: P. WINTERNITZ            */
+
+/*        Version 2.0 released on May 29, 1995           */
+
+/*                   Copyright 1991                      */
+
+/*********************************************************/
+
+You are using the 3 equations of the system.
+
+*** Number of determining equations before simplifications: 249 . ***
+
+                                      2      2
+WARNING ! We eliminated the factor:  U  S1 S2
+                                      1
+
+                                 2 dPHI3      2
+which was the coefficient of  - U  ----- S1 S2
+                                 1  dU
+                                      2
+
+                                       2                    3         2
+List of factors that are cancelled:  [U  A2 S1, U , U  S2, U  A2 S1, U  A2, 
+                                       1         1   1      1         1
+
+              3      2      2   2   2           2      3      2   2      2
+             U  A2, U  S1 W2 , U  W2 , S1, S2, U  S1, U  S1 S2 , U  S1 S2 ]
+              1      1          1               1      1          1
+
+*** Number of determining equations after simplifications: 30 . ***
+
+*** These determining equations are stored in LODE. ***
+
+(C32) PRINTEQN(LODE);
+ 
+
+             dPHI3
+Equation 1 : ----- = 0
+              dU
+                2
+
+             dPHI3
+Equation 2 : ----- = 0
+              dU
+                1
+
+              2
+             d PHI3
+Equation 3 : ------ = 0
+                2
+              dU
+                3
+
+             dETA3
+Equation 4 : ----- = 0
+              dX
+                4
+
+             dETA2
+Equation 5 : ----- = 0
+              dX
+                4
+
+             dETA1
+Equation 6 : ----- = 0
+              dX
+                4
+
+
+
+
+
+
+
+Equation 7 :
+
+         2
+  dF1   d ETA2
+2 --- + ------- = 0
+  dX    dX  dX
+    3     2   3
+
+Equation 8 :
+
+dETA4     dETA1
+----- - 2 ----- = 0
+ dX        dX
+   4         1
+
+Equation 9 :
+
+ 2
+d ETA2        dF1
+------ S2 - 2 --- S1 = 0
+   2          dX
+ dX             2
+   3
+
+Equation 10 :
+
+dETA2
+----- (S2 - S1) = 0
+ dX
+   3
+
+Equation 11 :
+
+dETA1
+----- (S2 - S1) = 0
+ dX
+   3
+
+Equation 12 :
+
+dETA4   dETA1
+----- - ----- = 0
+ dX      dX
+   4       1
+
+Equation 13 :
+
+   2         2
+  d PHI3    d ETA4
+2 ------- - ------ = 0
+  dU  dX       2
+    3   4    dX
+               4
+
+
+
+
+
+Equation 14 :
+
+   2         2
+  d PHI3    d ETA2
+2 ------- - ------ = 0
+  dX  dU       2
+    2   3    dX
+               3
+
+Equation 15 :
+
+         2
+  dF1   d ETA2
+4 --- - ------ = 0
+  dX       2
+    2    dX
+           3
+
+Equation 16 :
+
+         2           2
+  dF1   d ETA2      d ETA1
+2 --- + ------- + 4 ------- = 0
+  dX    dX  dX      dX  dX
+    3     2   3       1   3
+
+Equation 17 :
+
+ 2                        2
+d ETA2        dF1        d ETA1
+------ S2 - 2 --- S1 - 4 ------- S1 = 0
+   2          dX         dX  dX
+ dX             2          1   2
+   3
+
+Equation 18 :
+
+                          2
+dETA2      dF2           d ETA1
+----- W1 - --- S1 - 2 U  ------- S1 = 0
+ dX        dX          2 dX  dX
+   3         2             1   2
+
+Equation 19 :
+
+                          2
+dETA1      dF2           d ETA1
+----- W1 - --- S1 - 2 U  ------ S1 = 0
+ dX        dX          2    2
+   3         1            dX
+                            1
+
+
+
+
+
+
+
+
+
+Equation 20 :
+
+ 2                      2             2
+d ETA1        dF1      d ETA1        d ETA1
+------ S2 - 2 --- S1 + ------ S1 - 3 ------ S1 = 0
+   2          dX          2             2
+ dX             1       dX            dX
+   3                      2             1
+
+Equation 21 :
+
+                                     2
+dETA4      dETA1      dF2           d ETA1
+----- W1 - ----- W1 + --- S2 + 2 U  ------- S2 = 0
+ dX         dX        dX          2 dX  dX
+   4          1         3             1   3
+
+Equation 22 :
+
+ 2                      2           2
+d ETA1        dF1      d ETA1      d ETA1
+------ S2 - 2 --- S1 + ------ S1 + ------ S1 = 0
+   2          dX          2           2
+ dX             1       dX          dX
+   3                      2           1
+
+Equation 23 :
+
+ 2            2              2            2
+d ETA2       d ETA1         d PHI3       d ETA1
+------- S2 + ------- S2 + 2 ------- S1 - ------- S1 = 0
+dX  dX       dX  dX         dU  dX       dX  dX
+  2   3        1   3          3   3        1   3
+
+Equation 24 :
+
+   2         2        2        2
+  d PHI3    d ETA1   d ETA1   d ETA1
+2 ------- - ------ - ------ - ------ = 0
+  dX  dU       2        2        2
+    1   3    dX       dX       dX
+               3        2        1
+
+Equation 25 :
+
+dPHI3            dETA4     dETA1
+----- - 2 F1 - 2 ----- + 2 ----- = 0
+ dU               dX        dX
+   3                4         1
+
+
+
+
+
+
+
+
+
+Equation 26 :
+
+         2        2        2
+  dF1   d ETA1   d ETA1   d ETA1
+4 --- - ------ - ------ - ------ = 0
+  dX       2        2        2
+    1    dX       dX       dX
+           3        2        1
+
+Equation 27 :
+
+ 2            2                       2
+d ETA2       d ETA1         dF1      d ETA1
+------- S2 + ------- S2 + 4 --- S1 - ------- S1 = 0
+dX  dX       dX  dX         dX       dX  dX
+  2   3        1   3          3        1   3
+
+Equation 28 :
+
+ 2            2            2            2                2              2
+d PHI3   2   d PHI3   2   d PHI3   2   d PHI3      2    d F1      2    d F1
+------ W2  + ------ W2  + ------ W2  - ------ + 2 U  A2 ---- + 2 U  A2 ----
+   2            2            2            2        1      2       1      2
+ dX           dX           dX           dX              dX             dX
+   3            2            1            4               3              2
+
+                                                                    2
+                                                              2    d F1
+                                                         + 2 U  A2 ---- = 0
+                                                              1      2
+                                                                   dX
+                                                                     1
+
+Equation 29 :
+
+            2              3            2         2              3
+  dF1      d F2           d ETA1       d F2      d F2           d ETA1
+2 --- W1 + ---- S2 + 2 U  ------- S2 + ---- S1 + ---- S1 + 2 U  ------ S1
+  dX         2          2       2        2         2          2    3
+    3      dX             dX  dX       dX        dX              dX
+             3              1   3        2         1               1
+
+                                                      3
+                                                     d ETA1         dF1
+                                              + 2 U  ------- S1 + 2 --- = 0
+                                                   2       2        dX
+                                                     dX  dX           4
+                                                       1   2
+
+
+
+
+
+
+
+
+
+
+Equation 30 :
+
+                 2            2         2         2
+  dF2           d ETA1       d F1      d F1      d F1                    dF2
+2 --- W1 + 4 U  ------- W1 - ---- S2 - ---- S1 - ---- S1 + 2 A1 PHI3 + 2 ---
+  dX          2 dX  dX         2         2         2                     dX
+    3             1   3      dX        dX        dX                        4
+                               3         2         1
+
+                                  2
+                                 d ETA4           dETA4           dETA1
+                          - 2 U  ------ + 4 U  A1 ----- - 4 U  A1 ----- = 0
+                               2    2        3     dX        3     dX
+                                  dX                 4               1
+                                    4
+
+
+(D32)                                 DONE
+

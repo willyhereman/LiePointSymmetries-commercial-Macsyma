@@ -1,0 +1,246 @@
+(D3)              CSM$USERS:[WHEREMAN.NSFSYMMETRY]S_NLS.OUT;1
+
+(C4) batch("s_nls.dat")$
+
+(C5) /* The NLS equation : */
+ 
+/* number of independent variables: */
+
+p : 2 $
+
+(C6) /* number of dependent variables: */
+
+q : 2 $
+
+(C7) /* number of equations in the system: */
+
+m : 2 $
+
+(C8) parameters:[]$
+
+(C9) sublisteqs:[all]$
+
+(C10) info_given:false$
+
+(C11) subst_deriv_of_vi:true$
+
+(C12) highest_derivatives:all$
+
+(C13) warnings:true$
+
+(C14) e1 : u[1,[0,1]]+(u[1]^2+u[2]^2)*u[2]+u[2,[2,0]];
+
+                                       2    2
+(D14)                U          + U  (U  + U ) + U
+                      2, [2, 0]    2   2    1     1, [0, 1]
+
+
+(C15) e2 : u[2,[0,1]]-(u[1]^2+u[2]^2)*u[1]-u[1,[2,0]];
+
+                                       2    2
+(D15)                U          - U  (U  + U ) - U
+                      2, [0, 1]    1   2    1     1, [2, 0]
+
+
+(C16) v1 : u[1,[0,1]];
+
+(D16)                              U
+                                    1, [0, 1]
+
+(C17) v2 : u[2,[0,1]];
+
+(D17)                              U
+                                    2, [0, 1]
+
+(C19) symmetry(1,0,0)$
+
+/*********************************************************/
+
+/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */
+
+/*         CALCULATION OF THE SYMMETRY GROUP             */
+
+/*                 IN BATCH MODE                         */
+
+/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */
+
+/*         Project Supervision: P. WINTERNITZ            */
+
+/*        Version 2.0 released on May 29, 1995           */
+
+/*                   Copyright 1991                      */
+
+/*********************************************************/
+
+You are using the 2 equations of the system.
+
+*** Number of determining equations before simplifications: 46 . ***
+
+*** Number of determining equations after simplifications: 20 . ***
+
+*** These determining equations are stored in LODE. ***
+
+(C20) printeqn(lode)$
+
+              d
+Equation 1 : --- (ETA ) = 0
+             dU      2
+               2
+
+              d
+Equation 2 : --- (ETA ) = 0
+             dU      2
+               1
+
+              d
+Equation 3 : --- (ETA ) = 0
+             dX      2
+               1
+
+              d
+Equation 4 : --- (ETA ) = 0
+             dU      1
+               2
+
+              d
+Equation 5 : --- (ETA ) = 0
+             dU      1
+               1
+
+              2
+             d
+Equation 6 : --- (PHI ) = 0
+               2     1
+             dU
+               2
+
+              2
+             d
+Equation 7 : --- (PHI ) = 0
+               2     2
+             dU
+               1
+
+              2
+             d
+Equation 8 : --- (PHI ) = 0
+               2     2
+             dU
+               2
+
+                2
+               d
+Equation 9 : ------- (PHI ) = 0
+             dU  dU      1
+               1   2
+
+                 2
+                d
+Equation 10 : ------- (PHI ) = 0
+              dU  dU      2
+                1   2
+
+               2
+              d
+Equation 11 : --- (PHI ) = 0
+                2     1
+              dU
+                1
+
+Equation 12 :
+
+      2               2
+     d               d
+2 (------- (PHI )) - --- (ETA ) = 0
+   dX  dU      2       2     1
+     1   2           dX
+                       1
+
+Equation 13 :
+
+ d            d
+--- (PHI ) + --- (PHI ) = 0
+dU      2    dU      1
+  1            2
+
+Equation 14 :
+
+      2
+     d                d
+2 (------- (PHI )) - --- (ETA ) = 0
+   dU  dX      2     dX      1
+     1   1             2
+
+Equation 15 :
+
+      2
+     d                d
+2 (------- (PHI )) + --- (ETA ) = 0
+   dX  dU      1     dX      1
+     1   2             2
+
+Equation 16 :
+
+      2               2
+     d               d
+2 (------- (PHI )) - --- (ETA ) = 0
+   dU  dX      1       2     1
+     1   1           dX
+                       1
+
+Equation 17 :
+
+ d            d            d               d
+--- (PHI ) + --- (ETA ) - --- (PHI ) - 2 (--- (ETA )) = 0
+dU      2    dX      2    dU      1       dX      1
+  2            2            1               1
+
+Equation 18 :
+
+ d            d            d               d
+--- (PHI ) - --- (ETA ) - --- (PHI ) + 2 (--- (ETA )) = 0
+dU      2    dX      2    dU      1       dX      1
+  2            2            1               1
+
+Equation 19 :
+
+ 2
+d             3   d             2      d             d
+--- (PHI ) + U  (--- (ETA )) + U  U  (--- (ETA )) + --- (PHI )
+  2     2     2  dX      2      1  2  dX      2     dX      1
+dX                 2                    2             2
+  1
+
+       2   d             3   d             3   d             2      d
+ + U  U  (--- (PHI )) + U  (--- (PHI )) - U  (--- (PHI )) - U  U  (--- (PHI ))
+    1  2  dU      1      1  dU      1      2  dU      1      1  2  dU      1
+            2                 2                 1                    1
+
+           2                   2
+ + 3 PHI  U  + 2 PHI  U  U  + U  PHI  = 0
+        2  2        1  1  2    1    2
+
+Equation 20 :
+
+ d               2   d             3   d             3   d
+--- (PHI ) + U  U  (--- (PHI )) + U  (--- (PHI )) - U  (--- (PHI ))
+dX      2     1  2  dU      2      1  dU      2      2  dU      2
+  2                   2                 2                 1
+
+                                                                2
+    2      d                2   d             3   d            d
+ - U  U  (--- (PHI )) - U  U  (--- (ETA )) - U  (--- (ETA )) - --- (PHI )
+    1  2  dU      2      1  2  dX      2      1  dX      2       2     1
+            1                    2                 2           dX
+                                                                 1
+
+         2                          2
+ - PHI  U  - 2 U  PHI  U  - 3 PHI  U  = 0
+      1  2      1    2  2        1  1
+
+
+(C21) /* save("lodenls.lsp",lode)$ */
+
+closefile();
+
+

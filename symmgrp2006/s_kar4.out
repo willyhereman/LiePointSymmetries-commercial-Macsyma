@@ -1,0 +1,599 @@
+
+(D1)           CSM$USERS:[WHEREMAN]S_KAR4.OUT;1
+
+(C2) BATCH("s_kar4.dat")$
+
+(C3) parameters:[s1,s2,w1,w2,a1,a2];
+
+(D3)                        [S1, S2, W1, W2, A1, A2]
+
+(C4) sublisteqs:[all];
+
+(D4)                                 [ALL]
+
+(C5) info_given:true;
+
+(D5)                                  TRUE
+
+(C6) highest_derivatives:all;
+
+(D6)                                  ALL
+
+(C7) warnings:true;
+
+(D7)                                  TRUE
+
+(C8) subst_deriv_of_vi:true;
+
+(D8)                                  TRUE
+
+(C9) p:4;
+
+(D9)                                   4
+
+(C10) q:3;
+
+(D10)                                  3
+
+(C11) m:3;
+
+(D11)                                  3
+
+(C12) depends([eta1,eta2,eta3,f1,f2],[x[1],x[2],x[3],x[4]]);
+
+(D12) [ETA1(X , X , X , X ), ETA2(X , X , X , X ), ETA3(X , X , X , X ), 
+             1   2   3   4         1   2   3   4         1   2   3   4
+
+                                        F1(X , X , X , X ), F2(X , X , X , X )]
+                                            1   2   3   4       1   2   3   4
+(C13) depends(eta4,x[4]);
+
+(D13)                              [ETA4(X )]
+                                          4
+
+(C14) depends(phi1,[x[1],x[2],x[3],x[4],u[1]]);
+
+(D14)                      [PHI1(X , X , X , X , U )]
+                                  1   2   3   4   1
+
+(C15) depends(phi2,[x[1],x[2],x[3],x[4],u[2]]);
+
+(D15)                      [PHI2(X , X , X , X , U )]
+                                  1   2   3   4   2
+
+(C16) depends(phi3,[x[1],x[2],x[3],x[4],u[1],u[2],u[3]]);
+
+(D16)                  [PHI3(X , X , X , X , U , U , U )]
+                              1   2   3   4   1   2   3
+
+
+(C17) phi1 : f1*u[1];
+
+(D17)                                U  F1
+                                      1
+
+(C18) phi2 : (2*diff(eta1,x[1])-diff(eta4,x[4]))*u[2]+f2;
+
+                                      dETA1   dETA4
+(D18)                      F2 + U  (2 ----- - -----)
+                                 2     dX      dX
+                                         1       4
+
+(C19) gradef(eta3,x[1],-(s2/s1)*diff(eta1,x[3]));
+
+(D19)                                 ETA3
+
+(C20) gradef(eta3,x[2],-(s2/s1)*diff(eta2,x[3]));
+
+(D20)                                 ETA3
+
+(C21) gradef(eta2,x[1],-diff(eta1,x[2]));
+
+(D21)                                 ETA2
+
+(C22) gradef(eta3,x[3],diff(eta1,x[1]));
+
+(D22)                                 ETA3
+
+(C23) gradef(eta2,x[2],diff(eta1,x[1]));
+
+(D23)                                 ETA2
+
+
+(C24) 
+e1:u[1,[0,0,0,1]]+w1*u[1,[0,0,1,0]]+1/2*(s1*(2*u[1,[1,0,0,0]]*u[2,[1,0,0,0]]+
+   2*u[1,[0,1,0,0]]*u[2,[0,1,0,0]]+u[1]*u[2,[2,0,0,0]]+u[1]*u[2,[0,2,0,0]])+
+   s2*(2*u[1,[0,0,1,0]]*u[2,[0,0,1,0]]+u[1]*u[2,[0,0,2,0]]));
+
+(D24) U                W1 + ((U  U
+       1, [0, 0, 1, 0]         1  2, [0, 0, 2, 0]
+
+ + 2 U                U               ) S2
+      1, [0, 0, 1, 0]  2, [0, 0, 1, 0]
+
+ + (U  U                + 2 U                U
+     1  2, [2, 0, 0, 0]      1, [1, 0, 0, 0]  2, [1, 0, 0, 0]
+
+ + U  U                + 2 U                U               ) S1)/2
+    1  2, [0, 2, 0, 0]      1, [0, 1, 0, 0]  2, [0, 1, 0, 0]
+
+ + U
+    1, [0, 0, 0, 1]
+
+(C25) e2:u[2,[0,0,0,1]]+w1*u[2,[0,0,1,0]]-1/2*(s1*(u[1,[2,0,0,0]]/u[1]+
+   u[1,[0,2,0,0]]/u[1]-u[2,[1,0,0,0]]^2-u[2,[0,1,0,0]]^2)+
+   s2*(u[1,[0,0,2,0]]/u[1]-u[2,[0,0,1,0]]^2))+a1*u[3];
+
+                              U
+                               1, [0, 0, 2, 0]    2
+(D25) U                W1 - ((---------------- - U               ) S2
+       2, [0, 0, 1, 0]               U            2, [0, 0, 1, 0]
+                                      1
+
+                                           U                  U
+       2                  2                 1, [2, 0, 0, 0]    1, [0, 2, 0, 0]
+ + (- U                - U               + ---------------- + ----------------)
+       2, [1, 0, 0, 0]    2, [0, 1, 0, 0]          U                  U
+                                                    1                  1
+
+ S1)/2 + U  A1 + U
+          3       2, [0, 0, 0, 1]
+
+ 
+(C26) e3:u[3,[0,0,0,2]]-w2^2*(u[3,[2,0,0,0]]+u[3,[0,2,0,0]]+u[3,[0,0,2,0]])-
+   2*a2*u[1]*(u[1,[2,0,0,0]]+u[1,[0,2,0,0]]+u[1,[0,0,2,0]])-
+   2*a2*(u[1,[1,0,0,0]]^2+u[1,[0,1,0,0]]^2+u[1,[0,0,1,0]]^2);
+
+                                                                   2
+(D26) - (U                + U                + U               ) W2
+          3, [2, 0, 0, 0]    3, [0, 2, 0, 0]    3, [0, 0, 2, 0]
+
+ - 2 U  (U                + U                + U               ) A2
+      1   1, [2, 0, 0, 0]    1, [0, 2, 0, 0]    1, [0, 0, 2, 0]
+
+       2                  2                  2
+ - 2 (U                + U                + U               ) A2
+       1, [1, 0, 0, 0]    1, [0, 1, 0, 0]    1, [0, 0, 1, 0]
+
+ + U
+    3, [0, 0, 0, 2]
+
+ 
+(C27) v1:u[1,[0,0,0,1]];
+
+(D27)                           U
+                                 1, [0, 0, 0, 1]
+
+(C28) v2:u[2,[0,0,0,1]];
+
+(D28)                           U
+                                 2, [0, 0, 0, 1]
+
+(C29) v3:u[3,[0,0,0,2]];
+
+(D29)                           U
+                                 3, [0, 0, 0, 2]
+
+(C31) SYMMETRY(1,0,0)$
+
+/*********************************************************/
+
+/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */
+
+/*         CALCULATION OF THE SYMMETRY GROUP             */
+
+/*                 IN BATCH MODE                         */
+
+/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */
+
+/*         Project Supervision: P. WINTERNITZ            */
+
+/*        Version 2.0 released on May 29, 1995           */
+
+/*                   Copyright 1991                      */
+
+/*********************************************************/
+
+
+You are using the 3 equations of the system.
+
+*** Number of determining equations before simplifications: 249 . ***
+
+                                      2      2
+WARNING ! We eliminated the factor:  U  S1 S2
+                                      1
+
+                                 2 dPHI3      2
+which was the coefficient of  - U  ----- S1 S2
+                                 1  dU
+                                      2
+
+                                      3      2
+WARNING ! We eliminated the factor:  U  S1 S2
+                                      1
+
+                                 3 dPHI3      2
+which was the coefficient of  4 U  ----- S1 S2
+                                 1  dU
+                                      1
+
+                                      2
+WARNING ! We eliminated the factor:  U  S1
+                                      1
+
+                                    2
+                                 2 d PHI3
+which was the coefficient of  4 U  ------ S1
+                                 1    2
+                                    dU
+                                      3
+
+WARNING ! We eliminated the factor:  S2
+
+                                          2
+                                   dF1   d ETA2
+which was the coefficient of  - (2 --- + -------) S2
+                                   dX    dX  dX
+                                     3     2   3
+
+WARNING ! We eliminated the factor:  S1
+
+                                   dETA4     dETA1
+which was the coefficient of  - 2 (----- - 2 -----) S1
+                                    dX        dX
+                                      4         1
+
+                                      2   2
+WARNING ! We eliminated the factor:  U  W2
+                                      1
+
+                                   2 dETA2             2
+which was the coefficient of  - 8 U  ----- (S2 - S1) W2
+                                   1  dX
+                                        3
+
+                                      2      2
+WARNING ! We eliminated the factor:  U  S1 W2
+                                      1
+
+                                   2  dETA4   dETA1       2
+which was the coefficient of  - 8 U  (----- - -----) S1 W2
+                                   1   dX      dX
+                                         4       1
+
+                                      3
+WARNING ! We eliminated the factor:  U  A2
+                                      1
+
+                                    3    dETA2
+which was the coefficient of  - 16 U  A2 ----- (S2 - S1)
+                                    1     dX
+                                            3
+
+                                      2
+WARNING ! We eliminated the factor:  U  A2
+                                      1
+
+                                    2    dETA1
+which was the coefficient of  - 16 U  A2 ----- (S2 - S1)
+                                    1     dX
+                                            3
+
+                                      3
+WARNING ! We eliminated the factor:  U  A2 S1
+                                      1
+
+                                                  2
+                                   3       dF1   d ETA2
+which was the coefficient of  - 8 U  A2 (4 --- - ------) S1
+                                   1       dX       2
+                                             2    dX
+                                                    3
+
+WARNING ! We eliminated the factor:  U  S2
+                                      1
+
+                                           2           2
+                                    dF1   d ETA2      d ETA1
+which was the coefficient of  U  (2 --- + ------- + 4 -------) S2
+                               1    dX    dX  dX      dX  dX
+                                      3     2   3       1   3
+
+WARNING ! We eliminated the factor:  U
+                                      1
+
+                                     2                        2
+                                    d ETA2        dF1        d ETA1
+which was the coefficient of  - U  (------ S2 - 2 --- S1 - 4 ------- S1)
+                                 1     2          dX         dX  dX
+                                     dX             2          1   2
+                                       3
+
+                                      2
+WARNING ! We eliminated the factor:  U  A2 S1
+                                      1
+
+                                 2     dPHI3            dETA4     dETA1
+which was the coefficient of  8 U  A2 (----- - 2 F1 - 2 ----- + 2 -----) S1
+                                 1      dU               dX        dX
+                                          3                4         1
+
+List of parameters that were factored out and cancelled: 
+
+  2                    3         2      3      2      2   2   2           2
+[U  A2 S1, U , U  S2, U  A2 S1, U  A2, U  A2, U  S1 W2 , U  W2 , S1, S2, U  S1, 
+  1         1   1      1         1      1      1          1               1
+
+ 3      2   2      2
+U  S1 S2 , U  S1 S2 ]
+ 1          1
+
+*** Number of determining equations after simplifications: 30 . ***
+
+*** These determining equations are stored in: LODE. ***
+
+(C32) SAVE("lodekarpmanrun4.lsp",LODE);
+
+
+(D32)                    [lodekarpmanrun4.lsp, LODE]
+
+(C33) PRINTEQN(LODE);
+
+             dPHI3
+Equation 1 : ----- = 0
+              dU
+                2
+
+             dPHI3
+Equation 2 : ----- = 0
+              dU
+                1
+
+              2
+             d PHI3
+Equation 3 : ------ = 0
+                2
+              dU
+                3
+
+             dETA3
+Equation 4 : ----- = 0
+              dX
+                4
+
+             dETA2
+Equation 5 : ----- = 0
+              dX
+                4
+
+             dETA1
+Equation 6 : ----- = 0
+              dX
+                4
+
+Equation 7 :
+
+         2
+  dF1   d ETA2
+2 --- + ------- = 0
+  dX    dX  dX
+    3     2   3
+
+Equation 8 :
+
+dETA4     dETA1
+----- - 2 ----- = 0
+ dX        dX
+   4         1
+
+Equation 9 :
+
+ 2
+d ETA2        dF1
+------ S2 - 2 --- S1 = 0
+   2          dX
+ dX             2
+   3
+
+Equation 10 :
+
+dETA2
+----- (S2 - S1) = 0
+ dX
+   3
+
+Equation 11 :
+
+dETA1
+----- (S2 - S1) = 0
+ dX
+   3
+
+Equation 12 :
+
+dETA4   dETA1
+----- - ----- = 0
+ dX      dX
+   4       1
+
+Equation 13 :
+
+   2         2
+  d PHI3    d ETA4
+2 ------- - ------ = 0
+  dU  dX       2
+    3   4    dX
+               4
+
+Equation 14 :
+
+   2         2
+  d PHI3    d ETA2
+2 ------- - ------ = 0
+  dX  dU       2
+    2   3    dX
+               3
+
+Equation 15 :
+
+         2
+  dF1   d ETA2
+4 --- - ------ = 0
+  dX       2
+    2    dX
+           3
+
+Equation 16 :
+
+         2           2
+  dF1   d ETA2      d ETA1
+2 --- + ------- + 4 ------- = 0
+  dX    dX  dX      dX  dX
+    3     2   3       1   3
+
+Equation 17 :
+
+ 2                        2
+d ETA2        dF1        d ETA1
+------ S2 - 2 --- S1 - 4 ------- S1 = 0
+   2          dX         dX  dX
+ dX             2          1   2
+   3
+
+Equation 18 :
+
+                          2
+dETA2      dF2           d ETA1
+----- W1 - --- S1 - 2 U  ------- S1 = 0
+ dX        dX          2 dX  dX
+   3         2             1   2
+
+Equation 19 :
+
+                          2
+dETA1      dF2           d ETA1
+----- W1 - --- S1 - 2 U  ------ S1 = 0
+ dX        dX          2    2
+   3         1            dX
+                            1
+
+Equation 20 :
+
+ 2                      2             2
+d ETA1        dF1      d ETA1        d ETA1
+------ S2 - 2 --- S1 + ------ S1 - 3 ------ S1 = 0
+   2          dX          2             2
+ dX             1       dX            dX
+   3                      2             1
+
+Equation 21 :
+
+                                     2
+dETA4      dETA1      dF2           d ETA1
+----- W1 - ----- W1 + --- S2 + 2 U  ------- S2 = 0
+ dX         dX        dX          2 dX  dX
+   4          1         3             1   3
+
+Equation 22 :
+
+ 2                      2           2
+d ETA1        dF1      d ETA1      d ETA1
+------ S2 - 2 --- S1 + ------ S1 + ------ S1 = 0
+   2          dX          2           2
+ dX             1       dX          dX
+   3                      2           1
+
+Equation 23 :
+
+ 2            2              2            2
+d ETA2       d ETA1         d PHI3       d ETA1
+------- S2 + ------- S2 + 2 ------- S1 - ------- S1 = 0
+dX  dX       dX  dX         dU  dX       dX  dX
+  2   3        1   3          3   3        1   3
+
+Equation 24 :
+
+   2         2        2        2
+  d PHI3    d ETA1   d ETA1   d ETA1
+2 ------- - ------ - ------ - ------ = 0
+  dX  dU       2        2        2
+    1   3    dX       dX       dX
+               3        2        1
+
+Equation 25 :
+
+dPHI3            dETA4     dETA1
+----- - 2 F1 - 2 ----- + 2 ----- = 0
+ dU               dX        dX
+   3                4         1
+
+Equation 26 :
+
+         2        2        2
+  dF1   d ETA1   d ETA1   d ETA1
+4 --- - ------ - ------ - ------ = 0
+  dX       2        2        2
+    1    dX       dX       dX
+           3        2        1
+
+Equation 27 :
+
+ 2            2                       2
+d ETA2       d ETA1         dF1      d ETA1
+------- S2 + ------- S2 + 4 --- S1 - ------- S1 = 0
+dX  dX       dX  dX         dX       dX  dX
+  2   3        1   3          3        1   3
+
+Equation 28 :
+
+ 2            2            2            2                2              2
+d PHI3   2   d PHI3   2   d PHI3   2   d PHI3      2    d F1      2    d F1
+------ W2  + ------ W2  + ------ W2  - ------ + 2 U  A2 ---- + 2 U  A2 ----
+   2            2            2            2        1      2       1      2
+ dX           dX           dX           dX              dX             dX
+   3            2            1            4               3              2
+
+                                                                         2
+                                                                 2    d F1
+                                                            + 2 U  A2 ---- = 0
+                                                                 1      2
+                                                                      dX
+                                                                        1
+
+Equation 29 :
+
+            2              3            2         2              3
+  dF1      d F2           d ETA1       d F2      d F2           d ETA1
+2 --- W1 + ---- S2 + 2 U  ------- S2 + ---- S1 + ---- S1 + 2 U  ------ S1
+  dX         2          2       2        2         2          2    3
+    3      dX             dX  dX       dX        dX              dX
+             3              1   3        2         1               1
+
+                                                         3
+                                                        d ETA1         dF1
+                                                 + 2 U  ------- S1 + 2 --- = 0
+                                                      2       2        dX
+                                                        dX  dX           4
+                                                          1   2
+
+Equation 30 :
+
+                 2            2         2         2
+  dF2           d ETA1       d F1      d F1      d F1                    dF2
+2 --- W1 + 4 U  ------- W1 - ---- S2 - ---- S1 - ---- S1 + 2 A1 PHI3 + 2 ---
+  dX          2 dX  dX         2         2         2                     dX
+    3             1   3      dX        dX        dX                        4
+                               3         2         1
+
+                                     2
+                                    d ETA4           dETA4           dETA1
+                             - 2 U  ------ + 4 U  A1 ----- - 4 U  A1 ----- = 0
+                                  2    2        3     dX        3     dX
+                                     dX                 4               1
+                                       4
+
+(D33)                                 DONE
+
+(C34) CLOSEFILE();
+
+

@@ -1,0 +1,940 @@
+
+/* Last updated and modified: June 12, 2006 at 22:25 at home        */
+/*                                                                  */
+/* To see changes: search for 02/23/2006 WH and 06/12/2006 WH       */
+/*                                                                  */
+/* Reasons:                                                         */
+/*                                                                  */
+/* 1. Cancel factors like u[1]^2+u[2]^2+1 or u[2]*u[1]+1, etc.      */
+/*    and their powers for CP1, CP2, and CP3 project of Grundland.  */
+/* 2. Remove duplicates in list with new remdupl function.          */
+/* 3. New function for sorting as list according to length          */
+/*    (the number of terms in a list).                              */
+/* 4. Required a better way of computing the length of expressions. */
+
+/* ********************************************************** */
+/*                                                            */
+/*           *** M A C S Y M A  P R O G R A M ***             */
+/*                                                            */
+/*   COMPUTER ASSISTED CALCULATION OF THE SYMMETRY GROUPS     */
+/*                OF DIFFERENTIAL EQUATIONS                   */
+/*                                                            */
+/*  program name: SYMMGRP.MAX                                 */
+/*  purpose: find the determining equations needed to         */
+/*           compute the symmetry group of a given system     */
+/*           of differential equations                        */
+/*  computers: tested on VAX-11/750 & 780,                    */
+/*             VAX-8600 and on VAX-2000, and                  */
+/*             on PC: PC-Macsyma 417.125 and 2.0              */
+/*  language: MACSYMA release 412,                            */
+/*            compatible with REX MACSYMA 305                 */
+/*            and MACSYMA 309                                 */
+/*                                                            */
+/*  authors: B. Champagne and P. Winternitz,                  */
+/*           Centre de Recherches Mathematiques,              */
+/*           Universite de Montreal, Montreal, Quebec, Canada */
+/*                                                            */
+/*                            and                             */
+/*           W. Hereman,                                      */
+/*           Department of Mathematical and Computer Sciences */
+/*           Colorado School of Mines,                        */
+/*           Golden, CO 80401, USA                            */
+/*                                                            */
+/*  updated: June 12, 2006                                    */
+/*                                                            */
+/* ********************************************************** */
+ 
+/**************************************************************/
+/*                                                            */
+/*  Pattern matching functions and replacement rules.         */
+/*                                                            */
+/**************************************************************/
+
+REMOVEDUPLICATES:TRUE$
+REMOVEDUPLICATESMEMORY:FALSE$
+SORTLIST:TRUE$
+ 
+MATCHDECLARE([I,L],INTEGERP,J,LISTP)$
+ 
+DEFMATCH(FORMU1,U[L,J])$
+LOGICFORMU1(X):=IF FORMU1(X)=FALSE THEN FALSE ELSE TRUE$
+ 
+DEFRULE(RULE1,'DIFF(U[L],X[I]),U[L,J[I]])$
+DEFRULE(RULE2,'DIFF(U[L,J],X[I]),U[L,J+J[I]])$
+
+MATCHDECLARE(VARNUM,SCALARP,NONVARNUM,TRUE)$
+DEFMATCH(FORML1,VARNUM*NONVARNUM)$
+ 
+FREEOFSUM(EXPR):=FREEOF("+",EXPR)$
+NOTFREEOFSUM(EXPR):=NOT FREEOF("+",EXPR)$
+
+/**************************************************************/
+/*                                                            */
+/* UNDPAR(EXP) returns true if EXP is an undetermined         */
+/* parameter. Determined parameters are either >0 or <0.      */
+/* The parameters in the list of parameters are set to be >0. */
+/* All X[I], U[L] are determined parameters and are set >0.   */
+/* Determined parameters are always free of sums.             */
+/*                                                            */
+/**************************************************************/
+
+UNDPAR(EXP):=BLOCK([FLAG,PREDERROR:FALSE],FLAG:FALSE,
+   IF NONSCALARP(EXP) THEN FLAG:TRUE
+      ELSE(IF IS(EXP>0)=UNKNOWN THEN FLAG:TRUE
+            ELSE(IF (IS(EXP>0)) THEN FLAG:FALSE
+                  ELSE(IF (IS(EXP<0)) THEN FLAG:FALSE))),
+   FLAG)$
+
+/*  If EXPR is of the form P1^M with P1 a polynomial and M   */
+/*  a positive non-integer number, the function RATPOWEXP    */
+/*  returns (P1^M2)*(P1^M1) where M1+M2=M, 0<M2<1, and M1    */
+/*  is a positive integer.                                   */
+
+RATPOWEXP(EXPR):=BLOCK([EXP:EXPR,M,M1,M2,P1,PARTSWITCH:TRUE],
+  IF PART(EXP,0)="^" THEN(
+    P1:PART(EXP,1),
+    IF PART(P1,0)="+" THEN(
+      M:PART(EXP,2),
+      IF NOT INTEGERP(M) AND M>0 THEN(
+        M1:0,
+        IF M>1 THEN WHILE M>1 DO(M1:M1+1,M:M-1),
+        M2:M,
+        EXP:MULTTHRU(P1^M2,RATEXPAND(P1^M1))))),
+  RETURN(EXP))$
+ 
+/*************************************************************/
+/*                                                           */
+/*  PROVF(F) applies the k-th prolongation of the vector     */
+/*  field alfa to a function F depending on the variables    */
+/*  X[I] and U[L], and outputs the result.                   */
+/*                                                           */
+/*************************************************************/
+ 
+PROVF(F):=BLOCK([EXPR,L,LIST,J,TEST],
+  EXPR:SUM(ETA[I]*DIFF(F,X[I]),I,1,P) +
+       SUM(PHI[L]*DIFF(F,U[L]),L,1,Q),
+  LIST:LISTOFVARS(F),
+  FOR VAR IN LIST DO
+    IF FORMU1(VAR)#FALSE THEN
+      EXPR:EXPR+'PSI[L,J]*DIFF(F,U[L,J]) ,
+  EXPR)$
+ 
+/*************************************************************/
+/*                                                           */
+/*  TOTDF(I,F) applies the total derivative operator D[I]    */
+/*  to a function F depending on the variables X[I] and U[L],*/
+/*  and outputs the result.                                  */
+/*                                                           */
+/*************************************************************/
+ 
+TOTDF(I,F):=BLOCK([EXPR,L,LIST,J,TEST],
+  EXPR:DIFF(F,X[I])+SUM(U[L,J[I]]*DIFF(F,U[L]),L,1,Q),
+  LIST:LISTOFVARS(F),
+  FOR VAR IN LIST DO
+    IF FORMU1(VAR)#FALSE THEN
+      EXPR:EXPR+U[L,J+J[I]]*DIFF(F,U[L,J]) ,
+  EXPR)$
+ 
+/*************************************************************/
+/*                                                           */
+/*  FPSI(L,J) serves to calculate the coefficient            */
+/*  functions PSI[L,J] through the use of the recursive      */
+/*  formulae for the first and higher order prolongations.   */
+/*                                                           */
+/*************************************************************/
+ 
+FPSI(L,J):=BLOCK([EXPR,SUM],
+  SUM:SUM(PART(J,I),I,1,P),
+  FOR I THRU P UNLESS SUM#1 DO
+    IF J=J[I] THEN(
+      EXPR:TOTDF(I,PHI[L])-
+           SUM(U[L,J[II]]*TOTDF(I,ETA[II]),II,1,P),
+      SUM:0),
+  FOR I THRU P UNLESS SUM=0 DO
+    IF PART(J,I)>=1 THEN(
+      EXPR:TOTDF(I,PSI[L,J-J[I]])-
+           SUM(U[L,J-J[I]+J[II]]*TOTDF(I,ETA[II]),II,1,P),
+      SUM:0),
+  EXPR)$
+ 
+/**************************************************************/
+/*                                                            */
+/*  EXTSUBST(EXP) applies to an expression EXP depending on   */
+/*  the variables X[I],U[L] and U[L,J], all the substitutions */
+/*  given by the rhs of V[I] until all the V[I] are replaced. */
+/*  All the partial derivatives are also eliminated from EXP, */
+/*  except when the parameter SUBST_DERIV_OF_VI is FALSE.     */
+/*  It returns as output the new EXP so obtained.             */
+/*                                                            */
+/**************************************************************/
+ 
+EXTSUBST(EXP):=BLOCK([EXPR:EXP,FLAG,IND,L,LISTEV,LVAR,J],
+ 
+/*  GELIST(L1,L2) checks whether or not all the elements of   */
+/*  the list L1 are greater than those of L2.                 */
+
+  GELIST(L1,L2):=BLOCK([FLAG:TRUE],
+    FOR I THRU P WHILE FLAG DO
+      IF PART(L1,I)<PART(L2,I) THEN FLAG:FALSE,
+    FLAG),
+ 
+/*  GOODLJ determines if U[L,J] is the derivative of one      */
+/*  of the V[I].                                              */
+
+  GOODLJ(L,J):=BLOCK([FLAG:FALSE],
+    FOR I THRU M UNLESS FLAG DO
+      IF L=INDL[I] THEN
+        IF GELIST(J,INDJ[I]) THEN(
+          FLAG:TRUE,
+          IND:I),
+    FLAG),
+ 
+  /*  DIFSUB[LL,JJ] computes the substitutions needed to      */
+  /*  eliminate the V[I] and their derivatives from EXP.      */
+
+  DIFSUB[LL,JJ]:=BLOCK([DIFJ:JJ-INDJ[IND],EXPR,FLAG,LISOL,
+    LISTEV:ENDCONS([LL,JJ],LISTEV),LOOP1,LOOP2,LVAR,
+    SSUB:SUB[IND]],
+    IF DIFJ=J[0] THEN(
+      EXPR:SSUB,
+      GO(LOOP1)),
+    FLAG:TRUE,
+    FOR II THRU P WHILE FLAG DO
+      IF PART(DIFJ,II)>=1 THEN(
+        EXPR:PART(DIFSUB[LL,JJ-J[II]],2),
+        EXPR:DIFF(EXPR,X[II]),
+        FLAG:FALSE),
+    EXPR:APPLY1(EXPR,RULE1,RULE2),
+    LOOP1,
+    LVAR:LISTOFVARS(EXPR),
+    FOR VAR IN LVAR DO(
+      IF FORMU1(VAR)#FALSE THEN
+      IF GOODLJ(L,J) THEN
+      IF NOT MEMBER([L,J],LISTEV) THEN(
+      FOR INDEX IN LISTEV DO
+        IF L=INDEX[1] AND GELIST(J,INDEX[2]) THEN
+        ERROR("Wrong choice of variables for substitutions !"),
+      EXPR:SUBST(DIFSUB[L,J],EXPR))),
+    LISOL:SOLVE(U[LL,JJ]=EXPR,U[LL,JJ]),
+    IF LISTP(PART(LISOL,1)) THEN LISOL:PART(LISOL,1),
+    RETURN(PART(LISOL,1))),
+ 
+  /*  Main instructions for the EXTSUBST procedure.           */
+ 
+  DEPENDS(U,LISTX),
+  LISTEV:[],
+  FLAG:TRUE,
+  WHILE FLAG DO(
+    FLAG:FALSE,
+    LVAR:LISTOFVARS(EXPR),
+    FOR VAR IN LVAR DO
+      IF FORMU1(VAR)#FALSE THEN
+        IF GOODLJ(L,J)=TRUE THEN
+        IF SUBST_DERIV_OF_VI=TRUE THEN(
+          EXPR:SUBST(DIFSUB[L,J],EXPR),
+          FLAG:TRUE)
+        ELSE IF MEMBER(VAR,LISTV) THEN(
+          EXPR:SUBST(U[L,J]=SUB[IND],EXPR),
+          FLAG:TRUE)),
+  REMOVE(U,DEPENDS),
+  EXPR)$
+
+/**************************************************************/
+/*                                                            */
+/*  SEARCHCOEF(EXP): Given an expression EXP which is a       */
+/*  polynomial in the derivatives U[L,J] (|J|>=1) of the      */
+/*  U[L], this function finds all the coefficients of the     */
+/*  various partial derivatives and puts these coefficients   */
+/*  in one of the two lists LODE[1] and LODE[2] according     */
+/*  to their length.                                          */
+/*                                                            */
+/**************************************************************/
+ 
+SEARCHCOEF(EXP):=BLOCK([BCF,EXPR:EXP,HPT,I0,INDEX,LISTSYMB,
+  LISTVAR,NUMVAR,SYMB,SUMMAX,SUMNEW,SUMLEVEL,OTHERSUMNEW],
+  LOCAL(PUTINLIST,MAC1,MAC2,MAC3),
+ 
+  /*  PUTINLIST(EXPR) is used to put the coefficients of      */
+  /*  the partial derivatives in the good list.               */
+  
+  PUTINLIST(EXPR):=BLOCK([LGT],
+    IF PART(EXPR,0)#"+" THEN LGT:1 ELSE LGT:2,
+    LODE[LGT]:ENDCONS(EXPR,LODE[LGT])),
+
+/* begin taken out
+  PUTINLIST(EXPR):=BLOCK([LGT],
+    IF PART(EXPR,0)#"+" THEN LGT:1 ELSE LGT:2,
+/* 02/23/2006 WH attempt to remove duplicates */
+/* start of changes added these lines */
+   IF (NOT MEMBER(EXPR,LODE[LGT])) 
+   THEN(
+       LODE[LGT]:ENDCONS(EXPR,LODE[LGT])
+       ) 
+   ELSE( PRINT("WARNING!!! EXPR not added to list LODE[LGT]!"),
+         PRINT("where LGT =", LGT," and EXPR = ", EXPR)
+       )),
+/* end of changes */
+end taken out */
+
+  /*  MAC1 is a macro function used to create the K-th unit   */
+  /*  block of instructions needed by the coefficients        */
+  /*  extraction procedure.                                   */
+  
+  MAC1(K,X)::=BUILDQ(
+    [I0:CONCAT('I,K-1),I1:CONCAT('I,K),
+    HP:CONCAT('HP,K),REST:CONCAT('REST,K),K,X],
+    BLOCK([LP1,LP2,I1:I0,HP,REST],
+  LP1,  I1:I1+1,
+        IF I1>NUMVAR THEN(
+          IF EXPR#0 THEN PUTINLIST(EXPR),
+          RETURN('OUT)),
+ 
+IF K=1 THEN IF NOT MEMBER(LISTVAR[I1],RESLISTVAR) 
+        THEN RETURN('FIN),
+        HP:HIPOW(EXPR,LISTVAR[I1]),
+  LP2,  IF HP=0 THEN GO(LP1),
+        BCF:BOTHCOEF(EXPR,LISTVAR[I1]^HP),
+        EXPR:PART(BCF,1),
+        REST:PART(BCF,2),
+        IF EXPR#0 THEN X,
+        EXPR:REST,
+        HPT:HIPOW(EXPR,LISTVAR[I1]),
+        IF HPT=HP THEN(
+          INDEX:INDEX+1,
+          SYMB:CONCAT('SYMB,INDEX),
+          LISTSYMB:ENDCONS(SYMB=LISTVAR[I1]^HP,LISTSYMB),
+          IF HP=1 THEN(
+            EXPR:SUBST(LISTVAR[I1]^(1/3),LISTVAR[I1],EXPR),
+            EXPR:SUBST(SYMB,LISTVAR[I1]^(1/3),EXPR),
+            EXPR:SUBST(LISTVAR[I1]^3,LISTVAR[I1],EXPR))
+          ELSE
+            EXPR:SUBST(SYMB,LISTVAR[I1]^HP,EXPR),
+          HP:HIPOW(EXPR,LISTVAR[I1]))
+        ELSE
+          HP:HPT,
+        GO(LP2))),
+ 
+  /*  MAC2 and MAC3 are macro functions used to generate      */
+  /*  the complete set of instructions needed for the         */
+  /*  coefficients extraction procedure.                      */
+  
+  MAC2(K,X)::=BUILDQ([K,X],
+    IF K=1 THEN MAC1(K,X) ELSE MAC2(K-1,MAC1(K,X))),
+  MAC3(K)::=BUILDQ([K],
+    MAC2(K,PUTINLIST(EXPR))),
+ 
+  /*  Main instructions for the SEARCHCOEF procedure.         */
+  
+  IF EXPR=0 THEN RETURN(EXPR),
+ 
+  LISTVAR:REVERSE(SUBLIST(LISTOFVARS(EXPR),LOGICFORMU1)),
+  IF HIGHEST_DERIVATIVES#ALL THEN(
+  SUMMAX:0,
+  FLAG1:FALSE,
+  FOR VAR IN LISTVAR DO(
+    FORMU1(VAR),
+    SUMNEW:SUM(PART(J,I),I,1,P),
+    IF SUMNEW>SUMMAX THEN SUMMAX:SUMNEW),
+  SUMLEVEL:SUMMAX-HIGHEST_DERIVATIVES,
+    IF SUMLEVEL<=0 THEN(IF FLAG1=FALSE THEN(
+  PRINT("You are using all the derivatives in the prolongation."),
+    RESLISTVAR:LISTVAR,
+    FLAG1:TRUE))
+  ELSE(RESLISTVAR:[],
+    FOR VAR IN LISTVAR DO(
+       FORMU1(VAR),
+       OTHERSUMNEW:SUM(PART(J,I),I,1,P),
+          IF OTHERSUMNEW>SUMLEVEL THEN(
+          RESLISTVAR:ENDCONS(VAR,RESLISTVAR)))))
+  ELSE RESLISTVAR:LISTVAR,
+ 
+  NUMVAR:LENGTH(LISTVAR),
+  IF NUMVAR=0 THEN(
+    PUTINLIST(EXPR),
+    RETURN(NUMVAR)),
+  I0:0,
+  INDEX:0,
+  LISTSYMB:[],
+  EV('MAC3(NUMVAR),MAC3),
+  LODE[1]:SUBLIS(LISTSYMB,LODE[1]),
+  LODE[2]:SUBLIS(LISTSYMB,LODE[2]))$
+ 
+/**************************************************************/
+/*                                                            */
+/*  SIMPLEQN(): Given two lists of determining equations      */
+/*  in ETA[I] and PHI[L], one being LODE[1] containing the    */
+/*  monomials and the other being LODE[2] containing the      */
+/*  polynomials, this function produces a unique list of      */
+/*  determining equations, equivalent to the union of the     */
+/*  first two lists but completely free of repetition and     */
+/*  differential redundancy.                                  */
+/*  This new list is identified by LODE.                      */
+/*                                                            */
+/**************************************************************/
+ 
+SIMPLEQN():=BLOCK([DERIVSUBST:TRUE,EXPR,EXPR2,IND,IND1,IND2,
+  INFO,LGT,LGT1,LGT2,TEMP,TEMP2,TEMPNEW],
+  LOCAL(DIFFDEGREE,ORDER),
+  LISTEXPR1:[], 
+
+/* PRINTWARNING(EXPR1,EXPR2,LISTEXPR1) prints that EXPR1,i.e. */
+/* the coefficient of EXPR2, is canceled provided EXPR1 is a */
+/* nontrivial factor occurring for the first time.            */
+/* PRINTWARNING returns LISTEXP1, which is a list of all such */
+/* factors that have been canceled, but free of repetition.   */
+
+/* 02/23/2006 WH printwarning was controlled by warnings flag */
+/* and listexpr1 was only built if warnings=true */
+/* Now: actual printing only happens if warnings=true */
+/* but listexpr1 is always built for later display */
+PRINTWARNING(EXPR1,EXPR2,LISTEXPR1):=BLOCK([],
+IF (NOT SCALARP(EXPR1)) THEN(
+   IF FORML1(EXPR1)#FALSE THEN EXPR1:NONVARNUM,
+   IF (NOT MEMBER(EXPR1,LISTEXPR1)) THEN(
+/* begin changes */
+   IF WARNINGS=TRUE THEN(
+      PRINT("WARNING ! We eliminated the factor: ",EXPR1),
+      PRINT("which was the coefficient of ",EXPR2) ),
+/* end changes */
+LISTEXPR1:CONS(EXPR1,LISTEXPR1)) ),
+LISTEXPR1),
+
+/* ELIMINATOR(EXPR,LISTEXPR1) cancels factors that are        */
+/* completely determined, including sum-free combinations of  */
+/* X[I],U[L], and the parameters given in the parameters list.*/
+/* If warnings is TRUE, it prints factors that are eliminated.*/
+/* Whether or not warnings is TRUE, it prints the eliminated  */
+/* denominators. The eliminator return both EXPR and          */
+/* LISTEXPR1 as rows of a matrixexpr.                         */
+
+ELIMINATOR(EXPR,LISTEXPR1):=BLOCK([ORGEXPR,LE,PP,FE,DE,COEF1,COEF2],
+ORGEXPR:FACTOR(EXPR),
+EXPR:ORGEXPR,
+LE:LENGTH(EXPR),
+COEF1:1,
+COEF2:1,
+IF LE#0 AND PART(EXPR,0)="-" THEN(
+EXPR:-EXPR,
+LE:LENGTH(EXPR)),
+IF LE#0 AND PART(EXPR,0)="/" THEN(
+FE:FACTOR(EXPR),
+EXPR:NUM(FE),
+DE:DENOM(FE),
+COEF1:COEF1/DE,
+IF NOTFREEOFSUM(DE) THEN 
+PRINT("Be aware that ",DE," occurring as a DENOMINATOR is eliminated !")
+ELSE(
+IF UNDPAR(DE) THEN 
+PRINT("Be aware that ",DE," occurring as a DENOMINATOR is eliminated !")),
+LE:LENGTH(EXPR)),
+/* start of changes */
+IF LE#0 AND PART(EXPR,0)="*" THEN
+   FOR I:1 THRU LE DO(
+   PP:PART(EXPR,I),
+   /* PRINT("--- *** --- Part in factorization, PP= ", PP), */
+/* 02/23/2006 WH and 06/12/2006 WH */
+/* added several lines to cancel long factors that appear */
+/* in the CP1 and CP2 sigma model projects of Grundland */
+/* added and later removed the print statements */
+   IF ((NOT UNDPAR(PP)) AND FREEOFSUM(PP)) OR 
+      ( PP = U[6]*U[3]+U[5]*U[2]+U[4]*U[1]+1  OR 
+        PP = (U[6]*U[3]+U[5]*U[2]+U[4]*U[1]+1)^2  OR 
+        PP = (U[6]*U[3]+U[5]*U[2]+U[4]*U[1]+1)^3  OR 
+        PP = (U[6]*U[3]+U[5]*U[2]+U[4]*U[1]+1)^4  OR 
+        PP = U[4]*U[2]+U[3]*U[1]+1  OR
+        PP = (U[4]*U[2]+U[3]*U[1]+1)^2  OR
+        PP = (U[4]*U[2]+U[3]*U[1]+1)^3  OR
+        PP = (U[4]*U[2]+U[3]*U[1]+1)^4  OR
+        PP = U[2]*U[1]+1         OR 
+        PP = (U[2]*U[1]+1)^2     OR 
+        PP = (U[2]*U[1]+1)^3     OR 
+        PP = (U[2]*U[1]+1)^4     OR 
+        PP = U[2]^2+U[1]^2+1     OR 
+        PP = (U[2]^2+U[1]^2+1)^2 OR
+        PP = U[2]^2-U[1]^2+1     OR
+        PP = U[2]^2-U[1]^2-1     OR
+        PP = U[1]^2+1            OR
+        PP = (U[1]^2+1)^2        OR
+        PP = U[1]-1              OR
+        PP = U[1]+1         )
+   THEN( COEF1:COEF1*PP
+      /* , PRINT("-- ### ---, after multiplication by PP, COEF1= ", COEF1) */
+    )
+   ELSE( COEF2:COEF2*PP 
+        /* , PRINT("-- ### ---, after multiplication by PP, COEF2= ", COEF2) */
+       ) 
+), /* closes do  */
+/* 02/23/2006 removed if warnings=true, kept if coef1#1 */
+/* begin changes */
+IF COEF1#1 THEN 
+/* end changes */
+LISTEXPR1:PRINTWARNING(COEF1,ORGEXPR,LISTEXPR1),
+IF COEF2#1 THEN( EXPR:COEF2
+               /* , PRINT("-- ### ---, after cancellations EXPR =", EXPR) */
+               ), 
+MATRIXEXPR:MATRIX([EXPR],[LISTEXPR1]) ), /* closes block eliminator */
+/* end of changes */
+
+  /*  DIFDEGREE(EXPR,DV) finds the degree of derivation with  */
+  /*  respect to the X[I] and the U[L] of the dependent       */
+  /*  variable DV appearing once in EXPR.                     */
+
+  DIFFDEGREE(EXPR,DV):=BLOCK([SUM:0],
+    FOR I THRU P DO
+      SUM:SUM+DERIVDEGREE(EXPR,DV,X[I]),
+    FOR L THRU P DO
+      SUM:SUM+DERIVDEGREE(EXPR,DV,U[L]),
+    SUM),
+ 
+  /*  ORDER(LIST) arranges a LIST of monomial determining          */
+  /*  equations by increasing order of differentiation.            */
+  /*  02/23/2006 WH attempt to remove duplicates. As a precaution, */
+  /*  print a warning and EXPR that was not added to the list.     */
+
+  ORDER(LIST):=BLOCK([EXPR,FLAG,IND,INFO,LVAR,NEWL:LIST],
+    LOCAL(SLEQ),
+    SLEQ[IND]:=[],
+    WHILE NEWL#[] DO(
+      EXPR:PART(NEWL,1),
+      LVAR:LISTOFVARS(EXPR),
+      FLAG:TRUE,
+      FOR VAR IN LVAR WHILE FLAG DO
+        IF NOT FREEOF(ETA,PHI,VAR) THEN(
+          IND:DIFFDEGREE(EXPR,VAR),
+          FLAG:FALSE),
+/* begin taken out 
+/* 02/23/2006 WH attempt to remove duplicates */
+/* start of changes added these lines */
+   IF (NOT MEMBER(EXPR,SLEQ[IND])) 
+   THEN(
+        SLEQ[IND]:ENDCONS(EXPR,SLEQ[IND])
+       ) 
+   ELSE PRINT("WARNING!!! EXPR not added to list SLEQ[IND]!  EXPR = ", EXPR),
+/* end of changes */
+end taken out */
+      SLEQ[IND]:ENDCONS(EXPR,SLEQ[IND]),
+      NEWL:REST(NEWL,1) ), /* end do */
+    INFO:REST(ARRAYINFO(SLEQ),2),
+    FOR SUBSCRIPT IN INFO DO(
+      IND:PART(SUBSCRIPT,1),
+      NEWL:APPEND(NEWL,SLEQ[IND])),
+    NEWL),
+  LODE[1]:DELETE(0,LODE[1]),
+  LODE[2]:DELETE(0,LODE[2]),
+  LGT1:LENGTH(LODE[1]),
+  IF LGT1=0 THEN GO(LP1),
+  IF LGT1>1 THEN LODE[1]:ORDER(LODE[1]),
+
+  /*  Here differential redundancies are eliminated from      */
+  /*  the list of determining equations.                      */
+
+  IND1:1,
+  WHILE IND1<=LGT1 DO(
+    EXPR:PART(LODE[1],IND1),
+      IF EXPR#0 THEN(MATRIXEXPR:ELIMINATOR(EXPR,LISTEXPR1),
+      EXPR:MATRIXEXPR[1,1],
+      LISTEXPR1:MATRIXEXPR[2,1]),
+      LODE[0]:REST(LODE[1],IND1-LGT1-1),
+      LODE[1]:REST(LODE[1],IND1),
+      FOR IND2:0 THRU 2 DO(
+        LODE[IND2]:SUBST(0,EXPR,LODE[IND2]),
+        LODE[IND2]:DELETE(0,LODE[IND2])),
+      IND2:1,
+      LGT2:LENGTH(LODE[2]),
+      WHILE IND2<=LGT2 DO(
+        EXPR2:PART(LODE[2],IND2),
+        IF PART(EXPR2,0)#"+" THEN(
+/* begin taken out 
+/* 02/23/2006 WH attempt to remove duplicates. */
+/* Check if EXPR2 is member of lode[1] and print a warning */
+/* when an expression is not added to the list */
+/* start of changes added these lines */
+   IF (NOT MEMBER(EXPR2,LODE[1])) 
+   THEN(
+        LODE[1]:ENDCONS(EXPR2,LODE[1])
+       ) 
+   ELSE PRINT("WARNING!!! EXPR2 not added to list LODE[1]!  EXPR2 = ", EXPR2),
+/* end of changes */
+end taken out */
+          LODE[1]:ENDCONS(EXPR2,LODE[1]),
+          LODE[2]:APPEND(REST(LODE[2],IND2-LGT2-1),
+                         REST(LODE[2],IND2)),
+          LGT2:LGT2-1)
+        ELSE IND2:IND2+1),
+      IF LENGTH(LODE[1])>1 THEN LODE[1]:ORDER(LODE[1]),
+      LODE[1]:CONS(EXPR,LODE[1]),
+      LODE[1]:APPEND(LODE[0],LODE[1]),
+      IND1:LENGTH(LODE[0])+1,
+      LGT1:LENGTH(LODE[1]), 
+    IND1:IND1+1) ,
+ 
+  KILL(LODE[0]),
+  IF LENGTH(LODE[1])>1 THEN LODE[1]:ORDER(LODE[1]),
+ 
+  /*  Here we arrange the list of determining equations by    */
+  /*  increasing length, eliminate repetitions, and make      */
+  /*  some more algebraic simplifications.                    */
+
+  LP1,
+  TEMP:LODE[2],
+  KILL(LODE[2]),
+  WHILE TEMP#[] DO(
+    EXPR:PART(TEMP,1),
+    LGT:LENGTH(EXPR),
+/* 02/23/2006 WH attempt to remove duplicates */
+/* start of changes added these lines */
+/* begin taken out
+   IF (NOT MEMBER(EXPR,LODE[LGT])) 
+   THEN(
+        LODE[LGT]:ENDCONS(EXPR,LODE[LGT])
+       ) 
+   ELSE( PRINT("WARNING!!! EXPR not added to LODE[LGT], where LGT = ", LGT),
+        PRINT("EXPR = "),
+        PRINT(EXPR),
+        PRINT("Factored EXPR ="),
+        PRINT(FACTOR(EXPR)), 
+        PRINT("For LGT =", LGT," LODE[LGT] = "),
+        PRINT(LODE[LGT])
+       ),
+/* end of changes */
+end taken out */
+    LODE[LGT]:ENDCONS(EXPR,LODE[LGT]), 
+    TEMP:REST(TEMP,1)),
+  INFO:REST(ARRAYINFO(LODE),2),
+  FOR SUBSCRIPT IN INFO DO(
+    IND1:PART(SUBSCRIPT,1),
+    LGT:LENGTH(LODE[IND1]),
+    FOR IND THRU LGT DO(
+      EXPR:PART(LODE[IND1],IND),
+    IF EXPR#0 THEN(MATRIXEXPR:ELIMINATOR(EXPR,LISTEXPR1),
+    EXPR:MATRIXEXPR[1,1],
+    LISTEXPR1:MATRIXEXPR[2,1]),
+  LODE[IND1][IND]:EXPR),
+    TEMP2:[],
+    WHILE LODE[IND1]#[] DO(
+      EXPR:PART(LODE[IND1],1),
+      LODE[IND1]:SUBST(0,EXPR,LODE[IND1]),
+      LODE[IND1]:DELETE(0,LODE[IND1]),
+      TEMP2:SUBST(0,EXPR,TEMP2),
+      TEMP2:DELETE(0,TEMP2),
+/* begin taken out 
+/* 02/23/2006 WH attempt to remove duplicates */
+/* start of changes added these lines */
+   IF (NOT MEMBER(EXPR,TEMP2)) 
+   THEN(
+       TEMP2:ENDCONS(EXPR,TEMP2)
+       ) 
+   ELSE PRINT("WARNING!!! EXPR not added to list TEMP2!  EXPR = ", EXPR)
+/* otherwise the end do comes here */
+closeparenthesis, /* for end do */
+/* end of changes */
+end taken out */
+    TEMP2:ENDCONS(EXPR,TEMP2) ), /* end do */
+    TEMP:APPEND(TEMP,TEMP2)),
+    REMARRAY(LODE),
+/* start of changes HERE HERE HERE */
+/* 02/23/2006 WH attempt to remove duplicates in list TEMP ---> lode later */
+/* after all simplifications are done */
+   IF REMOVEDUPLICATESMEMORY=TRUE THEN(
+       PRINT("Number of equations in list TEMP before removing duplicates:",
+           LENGTH(TEMP)),
+           TEMPNEW:REMDUPL(TEMP),
+       PRINT("Number of equations in list TEMP after removal of duplicates:",
+           LENGTH(TEMP)) ) 
+   ELSE TEMPNEW:TEMP,
+/* end of changes */
+  LODE:TEMPNEW)$
+ 
+/**************************************************************/
+/*                                                            */
+/*  PRINTEQN(LIST) is a very simple function which prints     */
+/*  the elements of a LIST in an equation-like form.          */
+/*                                                            */
+/**************************************************************/
+ 
+PRINTEQN(LIST):=BLOCK([PLI,LGT:LENGTH(LIST)],
+  PRINT(" "),
+  FOR I THRU LGT DO(
+     PLI:PART(LIST,I),
+     IF FREEOFSUM(PLI) THEN PRINT("Equation",I,":",PLI=0)
+     ELSE(PRINT("Equation",I,":"),
+     PRINT(PLI=0))))$
+ 
+/**************************************************************/
+/*                                                            */
+/*  REMDUPL(LIST) is a function which removes duplicates      */
+/*  in a LIST (based on endcons function).                    */
+/*  Written by Michael Colagrosso on February 24, 2006.       */
+/*                                                            */
+/**************************************************************/
+
+REMDUPL(LIST):=BLOCK([LONGLIST,FILTEREDLIST:[]],
+LONGLIST:LIST,
+  FOR KK:1 THRU LENGTH(LONGLIST) DO(
+      IF (NOT MEMBER(LONGLIST[KK],FILTEREDLIST)) THEN
+         FILTEREDLIST:ENDCONS(LONGLIST[KK],FILTEREDLIST)), 
+RETURN(FILTEREDLIST))$
+
+/**************************************************************/
+/*                                                            */
+/*  REMDUPLHASH(LIST) is a function which removes duplicates  */
+/*  in a LIST (based on hashed list).                         */
+/*  Written by Michael Colagrosso on February 24, 2006.       */
+/*                                                            */
+/**************************************************************/
+
+REMDUPLHASH(LIST):=BLOCK([LONGLIST /*,FILTEREDLIST:[] */ ],
+LONGLIST:LIST,
+  FOR KK:1 THRU LENGTH(LONGLIST) DO(
+      FILTEREDLIST[LONGLIST[KK]]:LONGLIST[KK]), 
+  FILTEREDLIST:LISTARRAY(FILTEREDLIST),
+RETURN(FILTEREDLIST))$
+
+/**************************************************************/
+/*                                                            */
+/*  SORTLEN(LIST) is a function to sort entries in a list     */
+/*  according to their length (= number of terms in a sum).   */
+/*  Algorithm of Dinesh Mehta.                                */
+/*  Written by Willy Hereman on Tuesday, March 7, 2006.       */
+/*                                                            */
+/**************************************************************/
+
+SORTLEN(LIST):=BLOCK([MYLIST, LENMYLIST, KEY, II, JJ /* , FILTEREDLIST:[] */ ],
+MYLIST:LIST,
+LENMYLIST: LENGTH(MYLIST), 
+/* PRINT("Length of mylist = ", LENMYLIST), */
+  FOR JJ:2 THRU LENMYLIST DO(
+      KEY:MYLIST[JJ], 
+/*      PRINT("For II=",II," and JJ=",JJ, " entry key = ", KEY), */
+      II:JJ-1, 
+/*      PRINT("Updated value of II =", II), */
+      WHILE II>0 AND NTERMS(EXPAND(MYLIST[II])) > NTERMS(EXPAND(KEY)) DO(  
+        MYLIST[II+1]:MYLIST[II], 
+/*        PRINT("For II=",II," mylist[ii+1] = ", MYLIST[II+1]), */
+        II:II-1
+/*        , PRINT("Updated value of II=",II) */ 
+              ), /* end do2 */ 
+      MYLIST[II+1]:KEY ), /* end do1 */
+RETURN(MYLIST) )$
+
+/**************************************************************/
+/*                                                            */
+/*  SYMMETRY(IND1,IND2,IND3) stands for the main program.     */
+/*  A call to this function initiates the computation while   */
+/*  the three arguments enable the user to control partially  */
+/*  the execution.                                            */
+/*                                                            */
+/**************************************************************/
+ 
+COMMENTINTER():=BLOCK(
+PRINT("/*********************************************************/"),
+PRINT("/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */"),
+PRINT("/*         CALCULATION OF THE SYMMETRY GROUP             */"),
+PRINT("/*                IN INTERACTIVE MODE                    */"),
+PRINT("/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */"),
+PRINT("/*         Project Supervision: P. WINTERNITZ            */"),
+PRINT("/*        Version 3.0 released on June 12, 2006          */"),
+PRINT("/*                 Copyright 1991-2006                   */"),
+PRINT("/*********************************************************/"))$
+ 
+COMMENTBATCH():=BLOCK(
+PRINT("/*********************************************************/"),
+PRINT("/*      WELCOME TO THE MACSYMA PROGRAM FOR THE           */"),
+PRINT("/*         CALCULATION OF THE SYMMETRY GROUP             */"),
+PRINT("/*                 IN BATCH MODE                         */"),
+PRINT("/*       WRITTEN BY B. CHAMPAGNE AND W. HEREMAN          */"),
+PRINT("/*         Project Supervision: P. WINTERNITZ            */"),
+PRINT("/*        Version 2.0 released on June 12, 2006          */"),
+PRINT("/*                   Copyright 1991-2006                 */"),
+PRINT("/*********************************************************/"))$
+ 
+SYMMETRY(IND1,IND2,IND3):=BLOCK([X,U,ETA,PHI,EXPR],
+  LOCAL(INDJ,INDL,SUB),
+ 
+  /*  Instructions which serve to read in the data.           */
+
+IF IND1=0 THEN(
+ COMMENTINTER(),
+ P:READ("Number of independent variables ?"),
+ Q:READ("Number of dependent variables ?"),
+ M:READ("Number of equations in the complete system ?"),
+ PARAMETERS:READ("List of nonzero parameters ? Enter e.g.[a,b,...] or []"),
+ SUBLISTEQS:READ("List of equations ? Enter e.g. [e1,e3] or [ALL]"),
+ HIGHEST_DERIVATIVES:READ("Level of derivatives ? Enter integer or ALL"),
+ WARNINGS:READ("Warnings ? Enter TRUE or FALSE"),
+ INFO_GIVEN:READ("Information given ? Enter TRUE or FALSE"),
+ LISTE:MAKELIST(READ("Equation",I),I,1,M),
+ LISTV:MAKELIST(READ("Variable",I),I,1,M),
+ IF INFO_GIVEN=TRUE THEN(
+ LISTETA:MAKELIST(READ("Eta",I),I,1,P),
+ LISTPHI:MAKELIST(READ("Phi",I),I,1,Q)))
+ ELSE(
+    COMMENTBATCH(),
+    LISTE:EV(MAKELIST(CONCAT(E,I),I,1,M),EVAL),
+    LISTV:EV(MAKELIST(CONCAT(V,I),I,1,M),EVAL),
+    LISTETA:EV(MAKELIST(CONCAT(ETA,I),I,1,P),EVAL),
+    LISTPHI:EV(MAKELIST(CONCAT(PHI,L),L,1,Q),EVAL)),
+ 
+  /*  Instructions used to set up the environment.            */
+
+  IF (PART(SUBLISTEQS,1)=ALL) THEN(
+       R:M,
+       SUBLISTE:LISTE)
+       ELSE(
+           R:LENGTH(SUBLISTEQS),
+           IF R<=M THEN(SUBLISTE:EV(SUBLISTEQS))
+           ELSE PRINT("*** Error in sublisteqs ? ***")),
+  LISTARITH:TRUE,
+  RATDENOMDIVIDE:FALSE,
+  J[0]:MAKELIST(0,I,1,P),
+  FOR I THRU P DO J[I]:MAKELIST(IF J=I THEN 1 ELSE 0,J,1,P),
+  LISTX:MAKELIST(X[I],I,1,P),
+  LISTU:MAKELIST(U[L],L,1,Q),
+  LISTXU:APPEND(LISTX,LISTU),
+  FOR J:1 THRU LENGTH(LISTXU) DO ASSUME(PART(LISTXU,J)>0),
+  IF PARAMETERS#[] THEN(
+    SS:LENGTH(PARAMETERS),
+    FOR I:1 THRU SS DO ASSUME(PART(PARAMETERS,I)>0)),
+ IF INFO_GIVEN=FALSE THEN DEPENDS([ETA,PHI],LISTXU),
+ IF INFO_GIVEN=TRUE THEN(
+    ARRAY(ETA,P),
+    ETA[0]:0,
+    ARRAY(PHI,Q),
+    PHI[0]:0,
+    FOR I THRU P DO ETA[I]:PART(LISTETA,I),
+    FOR L THRU Q DO PHI[L]:PART(LISTPHI,L)),
+  IF IND2=0 THEN REMARRAY(PSI),
+  PSI[L,J]:=FPSI(L,J),
+  REMARRAY(DIFSUB),
+  KILL(LODE),
+  LODE[I]:=[],
+  IF M=0 THEN RETURN('DONE),
+  ALGSOLS:SOLVE(LISTE,LISTV),
+  IF LISTP(PART(ALGSOLS,1)) THEN ALGSOLS:PART(ALGSOLS,1),
+  FOR I THRU M DO
+    IF FORMU1(LISTV[I])=FALSE THEN
+      ERROR("WRONG choice of variable for substitution:",
+            LISTV[I])
+    ELSE(
+      INDJ[I]:J,
+      INDL[I]:L,
+      SUB[I]:PART(ALGSOLS,I,2)),
+ 
+  /*  Instructions which control the execution of the        */
+  /*  computation.                                           */
+
+  IF IND3=0 THEN
+      FOR I THRU R DO(
+      EXPR:PROVF(SUBLISTE[I]),
+      IF EXPR#0 THEN EXPR:EV(EXPR,PSI),
+      IF EXPR#0 THEN EXPR:EXTSUBST(EXPR),
+      IF EXPR#0 THEN EXPR:RATEXPAND(EXPR),
+      IF EXPR#0 THEN EXPR:SCANMAP(RATPOWEXP,EXPR),
+      IF EXPR#0 THEN EXPR:RATEXPAND(EXPR),
+      IF EXPR#0 THEN DENUM[I]:DENOM(EXPR),
+      IF EXPR#0 THEN EXPR:NUM(EXPR),
+      SEARCHCOEF(EXPR))
+  ELSE(
+      FOR I THRU R DO(
+      PRINT("WORKING ON EQUATION",I),
+      PRINT("  ENTER PROVF"),
+      EXPR:PROVF(SUBLISTE[I]),
+      PRINT("  EVALUATE PSI"),
+      EXPR:EV(EXPR,PSI),
+      PRINT("  ENTER EXTSUBST"),
+      EXPR:EXTSUBST(EXPR),
+      PRINT("  ENTER RATEXPAND"),
+      EXPR:RATEXPAND(EXPR),
+      EXPR:SCANMAP(RATPOWEXP,EXPR),
+      EXPR:RATEXPAND(EXPR),
+      DENUM[I]:DENOM(EXPR),
+      EXPR:NUM(EXPR),
+      PRINT("  ENTER SEARCHCOEF"),
+      SEARCHCOEF(EXPR)),
+      PRINT("  ENTER SIMPLEQN")),
+ 
+ FLAG2:FALSE,
+ IF HIGHEST_DERIVATIVES#ALL AND FLAG1=FALSE THEN(
+   IF HIGHEST_DERIVATIVES=1 THEN(
+    PRINT("Using only the information from terms involving the highest"),
+    PRINT("derivatives, i.e.:",RESLISTVAR),
+    PRINT("in the search for determining equations."))
+   ELSE(IF HIGHEST_DERIVATIVES=2 THEN(
+    PRINT("Using only the information from terms involving the highest"),
+    PRINT("and second highest derivatives, i.e.: ",RESLISTVAR),
+    PRINT("in the search for determining equations."))
+   ELSE(IF HIGHEST_DERIVATIVES=3 THEN(
+    PRINT("Using only the information from terms involving the highest,"),
+    PRINT("the second and the third highest derivatives, i.e.: "),
+    PRINT(RESLISTVAR),
+    PRINT("in the search for determining equations."))
+   ELSE(IF HIGHEST_DERIVATIVES>3 THEN(
+    PRINT("Using only the information from terms involving the highest"),
+    PRINT("the second, ... down to the ",HIGHEST_DERIVATIVES,"th"),
+    PRINT("highest derivatives, i.e.: ",RESLISTVAR),
+    PRINT("in the search for determining equations."))))))
+ ELSE IF HIGHEST_DERIVATIVES=ALL THEN
+      IF FLAG2=FALSE AND FLAG1=FALSE THEN(
+      PRINT("You are using all the derivatives in the prolongation"),
+      print("in this equation."),
+      FLAG2:TRUE),
+IF R=M THEN(IF M>=2 THEN(
+     PRINT("You are using the",M,"equations of the system.")))
+   ELSE IF R<M THEN(IF R>=2 THEN(
+      PRINT("You are using only the",R,"equations:",SUBLISTEQS),
+      PRINT("of the given system consisting of",M,"equations in total."))
+     ELSE(IF R=1 THEN(
+      PRINT("You are using only the equation:",SUBLISTEQS),
+      PRINT("of the given system consisting of",M,"equations in total.")))),
+  PRINT("*** Number of determining equations before",
+        "simplifications:",LENGTH(LODE[1])+LENGTH(LODE[2]),". ***"),
+    IF LENGTH(LODE[1])+LENGTH(LODE[2])=0 THEN LODE:[],
+    IF LENGTH(LODE[1])+LENGTH(LODE[2])#0 THEN(
+/* start of changes */ 
+/* 02/23/2006 WH attempt to remove duplicates in lode[1] and lode[2] */
+       IF LENGTH(LODE[1])#0 THEN( 
+       IF REMOVEDUPLICATES=TRUE THEN(
+       PRINT("Number determining eqs. in lode[1] before removing duplicates:",
+           LENGTH(LODE[1])),
+       LODE[1]:REMDUPL(LODE[1]),
+       PRINT("Number determining eqs. in lode[1] after removing duplicates:",
+           LENGTH(LODE[1])) )
+       ),
+       IF LENGTH(LODE[2])#0 THEN( 
+       IF REMOVEDUPLICATES=TRUE THEN(
+       PRINT("Number determining eqs. in lode[2] before removing duplicates:",
+           LENGTH(LODE[2])),
+       LODE[2]:REMDUPL(LODE[2]),
+       PRINT("Number determining eqs. in lode[2] after removing duplicates:",
+           LENGTH(LODE[2]))
+       ) ),
+/* end of changes */ 
+ /* now lists lode[1] and lode[2] simplified and combined in one list lode */
+       SIMPLEQN(),
+       IF LISTEXPR1#[] THEN
+  PRINT("List of factors that are canceled: ",LISTEXPR1) ),
+  PRINT("*** Number of determining equations after",
+        "simplifications:",LENGTH(LODE),". ***"),
+  IF LODE#[] THEN(
+/* begin taken out */
+/* 02/23/2006 WH attempt to remove duplicates just before storing lode */
+     IF REMOVEDUPLICATES=TRUE THEN(
+     PRINT("*** Number of determining equations before removing duplicates:",
+           LENGTH(LODE),". ***"),
+     LODE:REMDUPL(LODE),
+     PRINT("*** Number of determining equations after removing duplicates:",
+           LENGTH(LODE),". ***") ),
+     IF SORTLIST=TRUE THEN(
+     PRINT("*** Number of determining equations before resorting LODE:",
+          LENGTH(LODE),". ***"),
+     LODE:SORTLEN(LODE),
+     PRINT("*** Number of determining equations after resorting LODE:",
+          LENGTH(LODE),". ***") ),
+/* end taken out */
+     PRINT("*** These determining equations are stored in LODE. ***") ), 
+'DONE)$
+
+PRINT("Code symmgrp.max of June 12, 2006 was successfully loaded.");
+
+/* ****************************** END OF ALL ************************** */
+

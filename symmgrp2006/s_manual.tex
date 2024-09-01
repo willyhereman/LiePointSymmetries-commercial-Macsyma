@@ -1,0 +1,2016 @@
+%  Updated: May 29, 1995 at 13:00
+
+\documentstyle[12pt]{article}
+
+\textwidth=5.6in
+\textheight=8.1in
+\parskip=0pt  %\bigskipamount
+\oddsidemargin=.5in
+\topmargin=-.17in
+
+\def\C{{\rm\kern.24em \vrule width.02em height1.4ex depth-.05ex \kern-.26em
+C}}
+\def\R{{\rm I\kern-.20em R}}
+\def\Z{{\rm\kern.26em \vrule width.02em height0.5ex depth0ex \kern.04em
+\vrule  width.02em height1.47ex depth-1ex \kern-.34em Z}}
+\def\N{{\rm I\kern-.20em N}}
+\def\Q{{\rm\kern.24em \vrule width.02em height1.4ex depth-.05ex \kern-.26em
+Q}}
+
+\begin{document}
+\pagenumbering{roman}
+
+\begin{titlepage}
+
+\begin{center}
+{\Large The Computer Calculation of Lie Point Symmetries} \\
+{\Large of Large Systems of Differential Equations}  \\[.25in] 
+B. Champagne$^{\dagger}$\footnote[1]{INRS-T\'{e}l\'{e}communications, 
+Universit\'{e} du Qu\'{e}bec, 3 Place du Commerce, Verdun, Qu\'{e}bec,
+Canada H3E 1H6}, 
+W. Hereman$^{\ddagger}$\footnote[2]{This work was partly supported by AFOSR
+under Grant No. 85-NM-0263.}\\
+\& P. Winternitz$^{\dagger}$\footnote[3]{Ce rapport a \'{e}t\'{e} publi\'{e} 
+gr\^{a}ce \`{a} une subvention
+du fonds FCAR pour l' aide et le 
+soutien \`{a} la recherche.} \\[.25in]
+
+$\dagger$ Centre de Recherches Math\'{e}matiques \\
+Universit\'{e} de Montr\'{e}al \\
+C.P. 6128, Succursale A \\
+Montr\'{e}al, Qu\'{e}bec, Canada H3C 3J7 \\ [.25in]
+
+$\ddagger$Department of Mathematical and Computer Sciences  \\
+Colorado School of Mines \\
+Golden, CO 80401, USA \\[.60in]
+
+{\em \today}\\
+\end{center}
+\vskip 5pt
+
+\end{titlepage}
+
+\leftline{\Large {\bf Contents}}
+\vskip 2pt
+\contentsline {section}{\numberline {}Abstract}{iii}
+\contentsline {section}{\numberline {}Program Summary}{iv}
+\contentsline {section}{\numberline {}Long Write-Up}{1}
+\contentsline {section}{\numberline {1}Introduction}{1}
+\contentsline {subsection}{\numberline {1.1}The problem}{1}
+\contentsline {subsection}{\numberline {1.2}Review of symbolic programs}{2}
+\contentsline {subsection}{\numberline {1.3}The program symmgrp.max}{4}
+\contentsline {section}{\numberline {2}Procedure for Computing the 
+Determining Equations}{6}
+\contentsline {section}{\numberline {3}Description of the Program}{8}
+\contentsline {subsection}{\numberline {3.1}Description of the principal 
+functions}{9}
+\contentsline {subsection}{\numberline {3.2}List of principal identifiers}{11}
+\contentsline {subsection}{\numberline {3.3}Input data}{11}
+\contentsline {subsection}{\numberline {3.4}Output data}{13}
+\contentsline {subsection}{\numberline {3.5}Type of systems}{13}
+\contentsline {section}{\numberline {4}Example: The Karpman Equations}{15}
+\contentsline {section}{\numberline {5}Conclusion}{22}
+\contentsline {section}{\numberline {}Notes added in proof}{22}
+\contentsline {section}{\numberline {}Acknowledgements}{24}
+\contentsline {section}{\numberline {}References}{25}
+\contentsline {section}{\numberline {}Test Run Output}{29}
+\contentsline {section}{\numberline {}Listing of symmgrp.max }{35}
+\contentsline {section}{\numberline {}Listing of printeqn.max }{47}
+
+\vfill
+\newpage
+
+\begin{abstract}
+
+A MACSYMA program is presented that greatly helps in the calculation of
+Lie symmetry groups of large systems of differential equations. 
+
+The program calculates the determining equations
+for systems of $m$ differential equations of order $k$, 
+with $p$ independent and $q$ dependent variables, where $m, k, p $ and
+$q$ are arbitrary positive integers. 
+
+The program automatically produces a 
+list of determining equations for the coefficients of the vector field.
+This list has been parsed so that it is
+free of duplicate equations and trivial differential redundancies.
+Numerical factors and non zero parameters occuring as factors are also
+removed.  
+
+From the solution of these determining equations one can construct
+the Lie symmetry group. 
+
+An example shows the use the program in batch mode. It also illustrates
+a feedback mechanism, that not only allows the treatment of a large number of 
+complicated partial differential equations but also aids in solving
+the determining equations step by step.
+
+\end{abstract}
+
+\vfill
+\newpage
+
+\section*{PROGRAM SUMMARY}
+\begin{tabular}{ll}
+
+{\em Title of the program:} & SYMMGRP.MAX \\
+{\em Catalogue Number:} & - - - \\
+{\em Program obtainable from:} & CPC Program Library, \\
+  & Queen's University of Belfast, \\
+  & N. Ireland \\
+  & (see application form in this issue) \\
+{\em Computer \& Installation:} & VAX 11/750;  \\
+  & Centre de Calcul, \\
+  & Universit\'{e} de Montr\'{e}al, Montr\'{e}al, \\
+  & Qu\'{e}bec, Canada H3C 3J7 \\
+  & VAX 11/780; \\
+  & Center for the Mathematical Sciences, \\
+  & University of Wisconsin-Madison, \\
+  & Madison, WI 53705, USA \\
+  & VAX 8600; \\
+  & Computer Center, Colorado School \\
+  & of Mines, Golden, CO 80401, USA \\ 
+{\em Operating system:} & VMS 3.7 or higher \\
+{\em Programming language used:} & REX MACSYMA 305, \\
+  & compatible with MACSYMA 309 and 412 \\
+{\em High speed storage required:} & Problem dependent, \\
+  & typical working set size about 0.5 M bytes \\
+{\em Number of bits in a word:} & 32 \\
+{\em Number of lines in program:} & 688  \\
+{\em Card punching code:} & ASCII \\
+{\em Keywords:} & Symmetry group, differential equations, \\
+  & Lie algebras, symbolic computation,\\
+  & MACSYMA \\
+{\em Nature of the physical problem:} &    \\
+\end{tabular}
+\nopagebreak
+\vskip 1pt
+\noindent
+The symmetry group of a given system of differential equations modeling
+a physical phenomenon may be used to achieve several goals. 
+These include the classification of the solutions of the system,
+the generation of new solutions from known ones, 
+the simplification of the system
+by the method of symmetry reduction, to name a few. In the case where
+particular symmetries must be present, the symmetry group can be used to
+determine the validity of the modeling differential equations.
+
+\pagebreak
+\noindent
+{\em \ Method of solution:}
+\vskip 2pt
+\noindent
+The construction of the symmetry groups of
+differential equations is based on an adaptation of the method, the
+terminology and the method described in \cite{olverbook}. 
+This procedure is translated into a MACSYMA 
+\cite{macsymamanual,macsymausersguide} 
+program that performs the most elaborate part of the job, namely
+the construction of a complete list of determining equations which
+is free of redundant factors, repetitions and trivial differential 
+consequences.
+\vskip 2pt
+\noindent
+{\em \ Restrictions on the complexity of the problem:}
+\vskip 2pt
+\noindent
+For complicated systems of differential equations involving
+derivatives of high order, time limits and available computer memory
+may cause restrictions. Further limitations are discussed in Section 3.5 of
+the Long Write-Up.
+\vskip 2pt
+\noindent
+{\em \ Unusual features of the program:}
+\vskip 2pt
+\noindent
+The flexibility of this program and the
+possibility of using it in a partly interactive mode, allow one to find the 
+symmetry groups of essentially arbitrarily large systems of equations.  
+This is the main justification for
+presenting a new symbolic manipulation program in a field where several
+programs already exist.  Furthermore, this program has
+been in use (at the Universit\'{e} de Montr\'{e}al and elsewhere) for over five
+years, it has been tested on hundreds of systems of equations and has 
+thus been comprehensively debugged.
+\vskip 2pt
+\noindent
+{\em \ Running time:}
+\vskip 2pt
+\noindent
+Given a system of $m$ differential equations of order $k$ with $q$ unknowns
+and $p$ independent variables, running time is an increasing functions of
+$m, k, q$ and $p$. Typical running times (CPU) for an example are given 
+in Section 4.
+
+\vfill
+\newpage
+\pagenumbering{arabic}
+
+\section*{LONG WRITE-UP}
+\section{Introduction}
+\subsection{The problem}
+
+For the purpose of this article the 'symmetry group of a system of differential
+equations' is the largest local Lie group of local point transformations,
+acting on the independent and dependent variables of the equation and leaving
+the solution set of the system invariant. The symmetry group thus transforms
+solutions of the system amongst each other.
+A large body of old and new literature exists on this topic; here we just
+refer to some recent books and reviews 
+\cite{olverbook,amesbook}-\cite{winternitzkluwer}
+We also recommend the special issues of {\em Acta Applicandae Mathematicae}
+on 'Symmetries of Partial Differential Equations' \cite{specialissues}. 
+\vskip 2pt
+\noindent
+A major obstacle in the application of Lie group theory to solving differential
+equations is that usually a large number of tedious calculations is involved.
+The purpose of this article is to present and make available a MACSYMA program
+for the computer assisted calculation of symmetry groups.
+
+The setting is an entirely general one and the method is well known and
+described e.g. in \cite{olverbook}. 
+\vskip 2pt
+
+\nopagebreak
+We consider a system of $m$ differential equations 
+\begin{equation}
+{\Delta}^{i} (x, u^{(k)})= 0, \;\;\;\; i = 1,2, ... , m, \label{orgsystem}
+\end{equation}
+of order $k$, with $p$ independent and $q$ dependent real
+variables, denoted by
+\begin{eqnarray}
+x & = & (x_1 , x_2, ... , x_p ) \in {\R}^p , \label{variablesx}\\
+u & = & (u^1 , u^2 , ... , u^q ) \in {\R}^q. \label{variablesu}
+\end{eqnarray}
+
+\nopagebreak
+We stress that $m, k, p $ and $q$ are {\em arbitrary} positive integers.
+The group transformations have the form
+\begin{equation}
+\tilde{x} = \Lambda_g (x,u), \;\;\;\; \tilde{u} = \Omega_g (x,u), 
+\label{transform}
+\end{equation}
+where the functions 
+$ \Lambda_g$ and $ \Omega_g $ are to be determined. Note that the subscript
+$g$ refers to the group parameters. 
+The approach is an infinitesimal one; instead of looking for a Lie group
+$G$, we look for its Lie algebra $\cal L$, realized by vector fields of the
+form 
+\begin{equation}
+\alpha = \sum_{i=1}^{p} \eta^i (x,u) 
+\frac{\partial}{\partial x_i} + \sum_{l=1}^{q} \varphi_{l} (x,u)
+\frac{\partial}{\partial u^{l}}.
+\label{vectorfield}
+\end{equation}
+\pagebreak
+The procedure \cite{olverbook} for finding the coefficients
+$\eta^i (x,u)$ and $\varphi_l (x,u)$ 
+is described below.
+In essence, the computer constructs the $k^{\rm th}$ prolongation 
+${\rm pr}^{(k)} \alpha $ of the vector field $\alpha$, applies it to the
+system of equations (\ref{orgsystem}) and requests that the resulting 
+expression vanishes on the solution set of (\ref{orgsystem}),
+\begin{equation}
+{\rm pr}^{(k)} \alpha \Delta^i  \mid_{\Delta^{j} = 0} 
+\;\;\;\; i,j  = 1, ... , m. 
+\label{prolongation}
+\end{equation}
+
+\nopagebreak
+The result of implementing (\ref{prolongation}) is a system
+of linear homogeneous PDEs
+for $\eta ^i $ and $\varphi _l ,$ in which $x$ and $u$ are independent
+variables. 
+These are the so-called {\em determining equations} for the symmetries of the
+system.
+
+\nopagebreak
+The procedure thus consists of two major steps:
+{\em deriving} the determining equations and {\em solving} them.
+
+\subsection{Review of symbolic programs}
+\nopagebreak
+Several computer packages
+\cite{schwarzsiam,schwarzprogram1}-\cite{champagneprogram}
+exist for this purpose, and some other programs were written for specific
+examples \cite{rosencransprogram}.
+
+\nopagebreak
+The well-documented REDUCE program developed by F. Schwarz
+\cite{schwarzsiam,schwarzprogram1}-\cite{schwarzprogram4},
+is definitely going the furthest in 
+solving the determining equations with minimal intervention by the user.
+This program, called SPDE, is distributed with version 3.3 of REDUCE
+for various types of computers, ranging from PCs to CRAYs.
+Schwarz also rewrote SPDE 
+\cite{schwarzsiam,schwarzprogram4} for use with SCRATCHPAD II, a 
+symbolic manipulation program developed by IBM.
+
+\nopagebreak
+Based on Cartan's exterior calculus, Edelen \cite{edelenprogram} and
+Gragert and Kersten \cite{gragertetalprogram} did some pioneering work
+in using REDUCE to calculate the classical Lie symmetries of differential
+equations.
+Kersten \cite{kerstenprogram1,kerstenprogram2} later developed a 
+REDUCE software package for the
+calculation of the Lie algebra of infinitesimal symmetries (and corresponding
+Lie-B\"{a}cklund transformations) of an exterior differential system.
+Eliseev {\em et al} \cite{eliseevprogram} wrote a REDUCE program
+to generate (but not solve) the system of determining equations for 
+point and contact symmetries.
+Fedorova and Kornyak \cite{fedorovakornyakprogram1} generalized the 
+algorithm to include the case of Lie-B\"{a}cklund symmetries.
+
+\nopagebreak
+Apart from packages in REDUCE, we should mention the FORMAC programs by
+Fedorova and Kornyak \cite{fedorovakornyakprogram2} and Fushchich and
+Kornyak \cite{fushchichkornyakprogram} that create the system of 
+determining equations for the Lie-B\"{a}cklund symmetries and solves these
+equations as far as possible. The FORMAC package CRACKSTAR developed by
+Wolf \cite{wolfprogram} also allows investigation of Lie symmetries of
+PDEs, besides dealing with dynamical symmetries of ODEs and the like.
+
+\nopagebreak
+The program LIE by Head \cite{headprogram} is based on version 4.12
+of muMATH, running on IBM compatible PCs.
+Head's program calculates and solves the determining equations
+automatically. Interventions by the user are sometimes needed and
+therefore are made possible.
+
+\pagebreak
+The SYMCON package written by Vafeades \cite{vafeadesprogram1} also uses
+muMATH to calculate the determining equations (without solving them).
+Furthermore, the program verifies whether the symmetry group is of variational
+or divergence type and computes the conservation laws 
+associated with the symmetries.
+
+\nopagebreak
+Unfortunately, these programs are confined to the
+256$\;$K memory accessible by muMATH and can therefore presently not handle 
+very large systems of equations. 
+This limitation motivated Vafeades to rewrite his SYMCON program 
+in MACSYMA syntax \cite{vafeadesprogram2}. Although this program is
+similar in mission to ours, Vafeades' program requires quite a bit more
+interaction by the user. 
+Geoff Prince from LaTrobe University 
+(Melbourne, Australia) is working on a 'translation' of
+the source code of LIE into REDUCE.
+
+\nopagebreak
+The calculation of the Lie group by computer was also proposed
+by Popov, who used the program SOPHUS for the calculation of conservation
+laws of evolution equations
+\cite{popovprogram}.
+
+\nopagebreak
+The package DELiA by Bocharov \cite{bocharovprogram} also runs 
+on PC and claims to perform various tasks based on Lie's approach, such
+as the computation of point symmetries, conserved currents and conservation
+laws; simplification and partial integration of overdetermined systems
+of differential equations, etc.
+The marketing material that comes with the demonstration disk for DELiA 
+does not specify any underlying symbolic manipulation package. 
+We believe that the program is written in PASCAL.
+In \cite{bocharovbronsteinprogram} Bocharov and Bronstein present 
+SCoLAr, a package based on standard PASCAL, 
+for finding infinitesimal symmetries 
+and conservation laws of arbitrary systems of differential equations. 
+
+\nopagebreak
+To the best of our knowledge, no package is available yet for 
+the calculation of Lie symmetries with MAPLE and MATHEMATICA.
+
+\nopagebreak
+For completeness, we mention the pioneering work by C. Wulfman and his 
+master students Davison and Nagao \cite{wulfmanprogram1,wulfmanprogram2}. 
+Already in the early seventies, 
+Davison \cite{wulfmanprogram1} developed computer algorithms 
+in SNOBOL, a now obsolete computer language, 
+that could handle symbolic manipulations with differential operators. 
+In 1980, Nagao \cite{wulfmanprogram2} wrote the computer program 
+DETERMININGEQS (in Pascal) that could approximate Lie generators for 
+dynamical systems. 
+
+\nopagebreak
+Last but not least, we discuss the programs written in MACSYMA, the
+symbolic package our symmetry program is based upon.
+Just as REDUCE, MACSYMA is currently available for various types of computers, 
+ranging from PCs to various work stations and main frame computers 
+(such as VAX) and it is used all over the world.
+
+\nopagebreak
+Apart from an earlier version of our program \cite{champagneprogram} and the 
+work done by Rosencrans \cite{rosencransprogram},
+their are only three other MACSYMA-based symmetry programs.
+\pagebreak
+\noindent
+The MACSYMA version of SYMCON by Vafeades \cite{vafeadesprogram2} 
+was discussed above. Schwarzmeier and Rosenau 
+\cite{rosenauschwarzmeierprogram,schwarzmeierrosenauprogram} made a
+program that calculates the determining equations in their simplest form, 
+but does not solve them automatically. 
+
+\nopagebreak
+The program SYM\_DE by Steinberg \cite{steinbergprogram1,steinbergprogram2} 
+was recently added to the out-of-core library of MACSYMA. The program solves
+some (or all) of the determining equations automatically and if needed the
+user can (interactively) add extra information. Currently, Steinberg is working
+at the extension of his program so that it would include the calculation 
+of generalized (i.e. derivative dependent) symmetries.
+
+\subsection{The program symmgrp.max}
+
+\nopagebreak
+The present program, called SYMMGRP.MAX is a modification of a 
+package \cite{champagneprogram} that has been extensively used over the
+last five years at the University of Montr\'{e}al and elsewhere. 
+It has been tested on hundreds of systems of equations and has thus been 
+solidly debugged.
+The flexibility of this program and the possibility of using it in a
+partly interactive mode, allow to find the symmetry group of in principal
+arbitrarily large and complicated systems of equations 
+on relatively small computers.
+These are the main justifications for presenting yet another 
+new symbolic program in a field where several programs already exist.
+
+\nopagebreak
+The amount of interaction by the user will depend on the
+complexity of the system of differential equations and on the capacity
+of the computer used.
+Our experience is that for systems of equations the most time consuming
+part of the calculation (when done by hand) is the derivation of the
+determining equations and the elimination of redundant equations from the
+system. 
+
+\nopagebreak
+The actual solving of the determining equations can usually be done
+by inspection, using elementary results from the theory of linear PDEs.
+Solving them on a computer may be time consuming, since the simplest 
+approach varies greatly from case to case. Furthermore, a computer
+program may accidentally not catch the most general result 
+and therefore may return an incomplete symmetry group. 
+The authors are very aware of this problem which occurred in testing
+some of the other existing programs ! 
+Fortunately, as soon as the new programs by Schwarz \cite{schwarzsizeprogram} 
+and Reid \cite{reidprogram1}-{\cite{reidprogram3}, both for the 
+determination of the size of a symmetry group, become available this problem
+will be easily detectable.
+
+\nopagebreak
+Let us briefly digress on this topic.
+Indeed, Schwarz and Reid independently developed
+algorithms to determine the size of a symmetry group of Lie (point) symmetries.
+Schwarz's program in REDUCE \cite{schwarzsizeprogram} calculates the number of 
+parameters if the group is finite and the number of unspecified functions 
+and its arguments if the group is infinite. 
+
+\pagebreak
+Recently, Reid \cite{reidprogram1}-\cite{reidprogram3} took up 
+the same task. His program SYMCAL \cite{reidprogram2},
+written originally in MACSYMA and currently being converted into MAPLE, 
+computes the dimension and the structure constants of the Lie 
+symmetry algebra of any system of PDEs.
+An extension of the algorithm \cite{reidprogram3} also allows to classify
+differential equations (with variable coefficients) according to the
+structure of their symmetry groups. Furthermore, the approach 
+advocated by Reid applies to the determination of symmetries of Lie, contact, 
+and Lie-B\"acklund type as well as potential symmetries.
+
+\nopagebreak
+In the interest of versatility and simplicity, our present MACSYMA program 
+concentrates on deriving the determining equations. It does not solve them 
+neither does it calculate the size of the symmetry group.
+Nevertheless, we believe that our program has some distinguished features 
+and advantages:
+\nopagebreak
+\vskip 1pt
+\noindent
+1)$\;$The equations (\ref{prolongation}) can be treated simultaneously,
+i.e. ${\rm pr}^{(k)} \alpha $ can be applied to all $m$ equations 
+in the system.
+The output is then a system of determining equations that is partly solved.
+This means that the program takes all 'first order equations with one term'
+and their differential consequences and uses them to
+simplify the remaining determining system. This greatly decreases the
+number of equations to be solved manually.
+\nopagebreak
+\vskip 1pt
+\noindent
+2)$\;$If the computer can be expected to run out of space when applying the
+prolongation to the system (\ref{orgsystem}), it is possible to apply
+${\rm pr}^{(k)} \alpha $ to a subset of equations, for instance just to
+one equation, say $ \Delta^{1} = 0 .$ When implementing the requirement
+$\displaystyle {\rm pr}^{(k)} \alpha \Delta^1 \mid_{\Delta^j = 0} = 0 ,
+(j=1,...,m)$  of course, the program takes into account the entire 
+system (\ref{orgsystem}), not just the equation  $ \Delta^{1} = 0 $ itself. 
+\nopagebreak
+\vskip 1pt
+\noindent
+3)$\;$If the individual equations in the system (\ref{orgsystem})
+are so complex that the computer still runs out of space, it is possible
+to derive only a subset of the determining equations, e.g. those that
+occur as coefficients of the highest derivatives in (\ref{prolongation}).
+These are usually single term equations.
+\nopagebreak
+\vskip 1pt
+\noindent
+4)$\;$A feedback mechanism has been incorporated. Once some of the 
+determining equations have been solved the information obtained about the 
+coefficients $\eta^i $ and $ \varphi_l$ can be submitted to the computer, 
+which will present a new and simplified system of determining equations. 
+The new information 
+usually includes that the $\eta {\rm 's} $ and $ \varphi {\rm 's}$ are 
+independent of some variables or depend linearly on some of the 
+other variables. This greatly simplifies further calculations and, 
+after several runs, makes it possible to apply 
+${\rm pr}^{(k)} \alpha $ to the entire system 
+(\ref{orgsystem}), even for very complicated ones. The feedback 
+mechanism can be used all the way to the end.
+At the last stage, when the completely determined forms of the
+$\eta {\rm 's} $ and $ \varphi {\rm 's}$ are submitted,
+the program will print out that the number of determining equations is zero,
+i.e. the solution is verified. Hence, the program also allows to verify
+any solution previously calculated by hand or by means of other programs.
+
+\pagebreak
+To summarize, whenever $ {\rm pr}^{(k)} \alpha $  
+can be applied sucessfully to the system (\ref{orgsystem}), 
+or a subset thereof, it produces a complete list of
+determining equations.  
+This list is free of trivial factors, duplication and differential 
+redundancies. 
+If, however, due to memory, time or space limitations, a complete list of
+determining equations cannot be obtained, it is still possible to
+derive a subset of the determining equations.  In this case,
+heuristics are used to extract relevant information from that
+subset.  This information is then fed back
+into the program which resumes its calculations.
+\nopagebreak
+\vskip 1pt
+In this respect, 
+the philosophy of the approach implemented in the present program is to 
+follow the path that would be taken in a manual calculation. That is, 
+obtain in as simple a manner as possible all one term equations, solve
+them and feed the information back to the computer. This can be done by first
+treating just one equation and usually by extracting only the coefficients
+of the highest derivatives. All the necessary substitutions and simplifations 
+leading to the new determining system, 
+which are error-prone if done by hand, are carried out automatically 
+and correctly by this program.
+
+\nopagebreak
+\section{Procedure for Computing the Determining Equations}
+We closely follow the notations, the terminology and the method for symmetry 
+analysis used in \cite{olverbook}
+which are well adapted to computer programming. 
+Recall that the independent and 
+dependent variables for the system (\ref{orgsystem}) are denoted by 
+(\ref{variablesx}) and (\ref{variablesu}), respectively. 
+The partial derivatives of $u^l$ are represented using a
+multi index notation: for $J = (j_1 , j_2 , ... , j_p ) \in {\N}^p $
+we put
+\begin{equation}
+u_{J}^{l} \equiv \frac{\partial^{|J|} u^l}
+{\partial {x_1}^{j_1}   \partial {x_2}^{j_2} ...  \partial {x_p}^{j_p}} \; ,
+\label{ujl}
+\end{equation}
+where $|J| = j_1 + j_2 + ... + j_p$.
+Finally, $u^{(k)}$ will denote a vector whose components are all the partial
+derivatives of order $0$ up to $k$ of all the $u^l$.
+
+\nopagebreak
+Using these notations the procedure for obtaining the determining equations
+involves the following five steps:
+\nopagebreak
+\vskip 1pt
+\noindent
+(1)$\;$Construct the $k^{th}$ prolongation of the vector field $\alpha$ 
+in (\ref{vectorfield}) by means of the formula
+\begin{equation}
+{\rm pr}^{(k)} \alpha = \alpha 
++ \sum_{l=1}^{q} \sum_{J} \psi_{l}^{J} (x, u^{(k)})
+\frac{\partial }{\partial u^{l}_{J} }, \;\;\;\; 1 \leq |J| \leq k,
+\label{prolongationonalpha}
+\end{equation}
+where the coefficients $ \psi^{J}_{l} $ are defined as follows. 
+
+\pagebreak
+\noindent
+The coefficients of the first prolongation are
+\begin{equation}
+\psi_{l}^{J_{i}} = D_{i} \varphi_{l} (x,u) - \sum_{j=1}^{p} 
+u_{J_{j}}^l D_{i} \eta^{j} (x,u), \label{psijil}
+\end{equation}
+where $J_{i}$ is a $p-$tuple with $1$ on the $i^{\rm th}$ position 
+and zeros elsewhere, and $D_{i}$ is the total derivative operator
+\begin{equation}
+D_i = \frac{\partial}{\partial x_i} 
++ \sum_{l=1}^{q} \sum_J u_{J + J_{i}}^{l} \frac{\partial}
+{\partial u_{J}^{l}}, \;\;\;\; 0 \leq  |J| \leq k.  \label{totalderivative}
+\end{equation}
+The higher order prolongations are defined recursively as
+\begin{equation}
+\psi_{l}^{J+J_{i}} = D_{i} \psi^{J}_{l} - \sum_{j=1}^{p} u_{J+J_{j}}^{l}
+D_{i} \eta ^{j} (x,u), \;\;\;\; |J| \geq 1.
+\label{psijjil}
+\end{equation}
+\nopagebreak
+\vskip 1pt
+\noindent
+(2)$\;$Apply the prolonged operator ${\rm pr}^{(k)} \alpha $ to each equation
+$\Delta^i (x, u^{(k)} ) $ and require that
+\begin{equation}
+{\rm pr}^{(k)} \alpha \; \Delta^i \mid _{\Delta^{j} = 0} \;\;  = 0 \;\;\;\; 
+i,j = 1, ... , m.
+\label{prolongationonsystem}
+\end{equation}
+The meaning of condition (\ref{prolongationonsystem}) is 
+that ${\rm pr}^{(k)} \alpha $ vanishes on the solution set of the system 
+(\ref{orgsystem}).
+Precisely, this condition assures that $\alpha$ is an infinitesimal
+symmetry generator of the transformation (\ref{transform}), i.e. that 
+$u(x)$ is a solution of (\ref{orgsystem})  whenever $\tilde{u} (\tilde{x} )$
+is one.
+\nopagebreak
+\vskip 2pt
+\noindent
+(3)$\;$Choose $m$ components of the vector $u^{(k)}$, 
+say $ v^1 , ... , v^m $,
+such that:
+\nopagebreak
+\vskip 2pt
+\noindent
+(a) Each $v^i$ is equal to a derivative of a $u^l \;\; (l = 1, ..., q)$ 
+with respect to at least one variable $x_i \;\; (i = 1, ... , p). $ \par
+\noindent
+(b) None of the $v^i$ is the derivative of another one in the set. \par
+\noindent
+(c) The system (\ref{orgsystem})  can be solved algebraically for the $v^i$ 
+in terms of the remaining components of $u^{(k)}$, 
+which we denoted by $w$.
+Hence, 
+\begin{equation}
+v^i = S^i (x,w), \;\;\;\; i = 1, ... , m. \label{vi}
+\end{equation}
+\noindent
+(d) The derivatives of $v^i$, \par
+\begin{equation} 
+v^{i}_{J} = D_{J} S^{i} (x,w), \label{vij}
+\end{equation}
+\noindent
+where $D_{J} \equiv D_{1}^{{j}_{1}} D_{2}^{{j}_{2}} ... D_{p}^{{j}_{p}}$,
+can all be expressed in terms of the components of $w$ and their derivatives,
+without ever reintroducing the $v^i$ or their derivatives. \par
+
+\nopagebreak
+While the above procedure sounds complicated,
+for all specific systems that 
+have been considered the choice of the appropriate $v^i$ has been quite simple.
+
+\pagebreak
+\noindent
+For instance, for a system of evolution equations
+\begin{equation}
+u^{i}_{t} (x_1 , ... , x_{p-1} , t ) = F^{i} (x_1 , ... , x_{p-1}, t,u^{(k)}),
+\;\;\;\; i = 1, ... , m,
+\label{evoleqs}
+\end{equation}
+where $u^{(k)}$ involves derivatives with respect to the variables $x_i$ 
+but not $t$, the appropriate choice is clearly $ v^i = u_{t}^{i} .$
+\nopagebreak
+\vskip 2pt
+\noindent
+(4) Use (\ref{vi}) 
+to eliminate all $v^i$ and their derivatives from the expression
+(\ref{prolongationonsystem}), so that all the remaining variables 
+are now independent of each other.
+\nopagebreak
+\vskip 2pt
+\noindent
+(5) $\;$ Obtain the determining equations 
+for $ \eta^{i} (x , u ) $ and $ \varphi_l (x , u) $ 
+by equating to zero the coefficients
+of all functionally independent expressions in the remaining derivatives
+$u_{J}^{l}$.
+\vskip 2pt
+The described procedure is well defined as long as the variables $v^i$ 
+in (\ref{vi}) exist.
+Furthermore, the length and complexity of the calculations increase rapidly
+as $p, q, m $ and especially $k$ increase.
+
+\nopagebreak
+\section{Description of the Program}
+We now present the MACSYMA program SYMMGRP.MAX that realizes the procedure in 
+Section 2 and that
+provides a set of determining equations for the Lie symmetries
+of an arbitrary system of differential equations. 
+
+\nopagebreak
+For this program we used MACSYMA release 412.61, which is usually implemented 
+on VAX computers operating under VMS.
+Note however that the program contains nothing beyond standard MACSYMA
+statements and it is therefore compatible with earlier versions of 
+MACSYMA, e.g. REX MACSYMA 305 and MACSYMA 309.6 (running under UNIX).
+The user is supposed to have minimal experience with MACSYMA.
+Information about the syntax of MACSYMA and many examples of its use
+may be found in \cite{macsymamanual,macsymausersguide}. 
+
+\nopagebreak
+The program SYMMGRP.MAX for which the source code is given further,
+consists essentially of function definitions. 
+In fact, an appropriate function is defined for each major
+task in the process. As we will see later, these
+functions may be used individually provided that care is taken with respect
+to their arguments. 
+
+\nopagebreak
+The primary function is called {\bf SYMMETRY} and it may be considered
+as the main program. Once called, it reads the data, sets up the
+environment for the calculation and then goes through the major steps
+in the calculation by sequentially calling the other functions.
+
+\nopagebreak
+In addition to function definitions, there is a set of statements at the
+top of the program that serves many purposes throughout the execution.
+This set contains replacement {\em RULE} definitions, 
+{\em MATCHDECLARE} statements
+and {\em PATTERN MATCHING} definitions.
+
+\pagebreak
+\subsection{Description of the principal functions}
+\vskip 1pt
+{\bf PROVF(F) }: Applies the $k^{th}$ prolongation of $\alpha$ in
+(\ref{vectorfield}) to a function $F(x, u^{(k)})$ 
+and outputs the result. 
+\vskip 2pt
+\noindent
+{\bf TOTDF(I,F)}: Applies the operator of total derivative $D_i$ defined in 
+(\ref{totalderivative}) to a function $F(x, u^{(k)}) $ and
+outputs the result.
+\vskip 2pt
+\noindent
+{\bf FPSI(L,J)}: Calculates the coefficients $\psi^{J}_{l}$ in 
+(\ref{prolongationonalpha})
+through the use of the recursive formula (\ref{psijil}) and (\ref{psijjil}).
+Actually, these coefficients are stored in an array PSI[L,J] defined by
+PSI[L,J] := FPSI(L,J), so that one may call PSI instead of FPSI. 
+The reason for this is that we can clear the array PSI without clearing 
+the function 
+definition used to calculate the $\psi^{J}_{l}$. Note that according to the
+notation of Section 2, $J$ must be a MACSYMA list of $p$ integers.
+\vskip 2pt
+\noindent
+{\bf EXTSUBST(EXPR)}: Applies to an expression EXPR depending on $x$ and 
+$u^{(k)}$
+the substitutions (\ref{vi}) and (\ref{vij})
+until all the $v^i$ and their partial derivatives have been eliminated from
+EXPR. It returns the new expression so obtained.
+The function EXTSUBST may be used separately but the information concerning
+the basic substitution (\ref{vi}) must be given. This is done by rewriting
+(\ref{vi}) in the form
+\begin{equation}
+u^{l_{i}}_{{J}^{i}} = S^i (x,w), \;\;\;\; i = 1, ... , m,
+\label{si}
+\end{equation}
+and according to this, defining the following arrays before using EXTSUBST:
+\begin{equation}
+\left.
+\begin{array}{lll}
+ INDJ[i] & : & J^i \\
+ INDL[i] & : & l^i \\
+ SUB[i]  & : & S^{i} (x,w) \\
+\end{array}
+\right\} i = 1, ... , m.
+\label{indj}
+\end{equation}
+\nopagebreak
+\noindent
+{\bf SEARCHOEFF(EXPR)}: Given an expression EXPR which is a polynomial in the
+derivatives of $u^l_J$ (exponents of the $u^l_J$ need not be integers but 
+instead may be any real numbers), this function finds all the coefficients
+of the various partial derivatives of $u$ and puts these coefficients in one
+of two lists according to their length. More explicitly, at the end of the
+procedure,
+\nopagebreak
+\vskip 2pt
+\noindent
+LODE[1]
+will be a list containing all the coefficients which are 
+monomials; 
+\vskip 2pt
+\noindent
+LODE[2] will be a list containing all the coefficients which are 
+polynomials (containing $'+'$ as the main operator). 
+\nopagebreak
+\vskip 2pt
+Note that in the present context, these coefficients will be precisely the
+determining equations.
+\nopagebreak
+\vskip 2pt
+\noindent
+{\bf SIMPEQN()}: Given the two lists of determining equations in $\eta^i$ and 
+$\varphi_l$, LODE[1] and LODE[2], 
+this function produces a unique list of
+determining equations called LODE, equivalent to the union of the first two
+lists but free of repetition and differential redundancy. More precisely,
+\pagebreak
+\begin{enumerate}
+\item Equations of LODE will be ordered by increasing length relative to the
+operator '+' (beginning with the monomials and ending with the longest
+polynomials);
+\item Monomial equations of LODE will be ordered by increasing order of 
+differentiation with respect to $x_i$ and $u^l$;
+\item The list of  equations LODE will be free of repetition and trivial
+differential redundancy;
+\item Any common factors, such as $x_i, u^l$, their products and powers 
+thereof, occurring in the equations of LODE  will be factored 
+out and canceled. 
+
+\nopagebreak
+The ELIMINATOR will also cancel all nonzero parameters 
+(their products and powers)
+given explicitly in the data file (see further). 
+There will be a message for these
+cancellations provided the parameter {\em warnings} is set to true. 
+As a precaution, at the end of the simplifications the user is 
+provided with a list of all the (non-trivial) factors that have been canceled 
+during the execution of SIMPEQN. 
+Special warnings messages are given if division
+by parameters occurs. Note that the program will not clear sums or
+differences of parameters, derivatives of functions, and the like.
+This enables the user to determine how the symmetry group is affected by 
+various choices of free parameters and functions.
+\end{enumerate}
+\nopagebreak
+\phantom{junk junk junk junk}
+\vskip 1pt
+\indent
+{\bf PRINTEQN(LIST)}: This function prints the elements of a LIST in
+an equation like form (see 'Test Run Output' further on).
+\nopagebreak
+\vskip 2pt
+\noindent
+{\bf SYMMETRY(IND1,IND2,IND3)}: This function stands
+for the main program. A call to it initiates the computation while
+the three arguments enable the user to partially control the execution.
+These arguments may take the values $0$ and $1$ and according to their values,
+different actions are taken by the program as shown in Table 1.
+
+\begin{center}
+\begin{tabular}{||c|c|l||} \hline \hline
+\multicolumn{3}{||c||}{\em Table 1 $\;\;\;$ Description of 
+the arguments of SYMMETRY}  \\ \hline
+Parameter &  Value & $\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;$ 
+Effect on the execution \\ \hline \hline 
+IND1 & 0 & The program is used in interactive mode   \\ \hline
+   & 1 & The program is used in batch mode   \\ \hline \hline
+IND2 & 0 &The array PSI is cleared before the computation starts \\ \hline
+   & 1 & PSI is not cleared, only new PSI will be computed \\ \hline \hline
+IND3 & 0 & No trace of the calculations will be given\\ \hline
+   & 1 & A trace of the calculations will be given  \\ \hline \hline
+\end{tabular}
+\end{center}
+
+\pagebreak
+\subsection{List of principal identifiers}
+The correspondence between the identifiers used in the program 
+and the mathematical symbols introduced in Sections 1 and 2 appear in Table 2.
+
+\nopagebreak
+\begin{center}
+\begin{tabular}{||c|c|l||} \hline \hline
+\multicolumn{3}{||c||}{\em Table 2 $\;\;\;$ 
+List of the principal identifiers} \\ \hline
+Text  & Program & $\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;$ 
+Meaning \\ \hline \hline 
+$p $    &  $ P$  & Number of independent variables  \\ \hline
+$q $    &  $ Q$  & Number of dependent variables  \\ \hline
+$m $    &  $ M$  & Number of equations in the system  \\ \hline
+$x_i $ & $ X[I]$ & Independent variables ($I \in \{ 1,2, ... , P \}$) \\ \hline
+$u^l$  & $ U[L]$ & Dependent variables ($ L \in \{ 1,2, ... , Q \}$) \\ \hline
+$J_{i}$ & $J[I] $   & Canonical vectors, e.g., $J[2]=[0,1,0,...,0] $  \\ \hline
+$(j_1 , j_2, ... , j_p ) $ & $[J[1] , J[2], ..., J[p] ]$
+&List of canonical vectors\\ \hline
+$ u^{l}_{J}$ & $ U[L,J]$   & Derivatives of $u^{l}$  \\ \hline
+$ \eta^{i}$ & ETA$[I]$    & Coefficient of 
+                            $\textstyle \frac{\partial}{\partial x_i }$
+in the vector field  \\ \hline
+$ \varphi_{l}$ & PHI$[L] $ & Coefficient of 
+                             $\textstyle \frac{\partial}{\partial u^l }$
+in the vector field   \\ \hline
+$ \psi^{J}_{l}$ & PSI$[L,J] $ & Derivatives of $\psi_{l}$  \\ \hline
+$ \Delta^{i}$ &$EI$ & Equations in the system, $E1, E2,$ etc. \\ \hline
+$ v^{i}$  & $VI$ & Variables for the substitution, $V1, V2,$ etc. \\ \hline
+\hline
+\end{tabular}
+\end{center}
+
+\nopagebreak
+\subsection{Input data}
+Every data file must have the following information:
+\begin{enumerate}
+\item The number of independent variables : $p$ (positive integer)
+\item The number of dependent variables : $q$ (positive integer)
+\item  The number of equations in the complete system : $m$ (positive integer)
+\item The list of nonzero parameters (occurring in the given equations) that 
+may be factored out and subsequently canceled: 
+{\em parameters} : [a1,s1,aa,......,w2].
+If there are no such parameters then {\em parameters} : [$\;$]. 
+A discussion of names for parameters that may not be used is given
+in Section 3.5.
+\item The number of equations the program has to treat, controlled by
+{\em sublisteqs}. 
+For example, {\em sublisteqs}: [e1] for the first equation;
+{\em sublisteqs}: [ei,...,em] for the 
+$i^{th}$ through the $m^{th}$ equations only; 
+{\em sublisteqs}: [all] for all the equations in the system
+
+\pagebreak
+\item The desired subset of the determining equations is controlled by
+setting {\em highest\_derivatives}: $s$, where
+$s$ stands for a positive integer indicating a count-down for the orders 
+of derivatives in the prolongation. For example,
+{\em 1} refers to information from the highest derivatives
+only, {\em 2} for highest and second highest derivatives, etc., 
+{\em all} will result in all the determining equations since all the 
+terms in the prolongation were considered
+\item The flag {\em warnings} : true or false,
+controls the printout of messages about division by parameters 
+and other simplifications 
+\item The flag {\em info\_given }: false or true,
+is used in connection with the feedback mechanism for solving the 
+determining equations.
+Information about the coefficients $\eta^i$ and the $\varphi_l$ 
+in the vector field $\alpha$ must be entered in a specific way as 
+discussed and exemplified in Section 4
+\item The real equations $\Delta^i$ in (\ref{orgsystem})
+must be given as $ei: ........ , $
+with $ i = 1, ... , m $. You only have to put in the left hand side of the
+equation, leaving out {\em '= 0'}. For complex equations see Section 3.5
+\item The variables $v^i$ in (\ref{vi}), 
+chosen for the substitution are given as $vi: ........, $
+with $i = 1, ... , m. $
+\end{enumerate}
+
+\nopagebreak
+Whether the program is used in batch mode or interactively, 
+the data must be entered in an appropriate way:
+\vskip 2pt
+\noindent
+{\bf (1) ~Batch mode}: 
+
+\nopagebreak
+This mode is definitely recommended for equations of 
+fairly high order or for systems of equations (see Section 4).
+A simple batch file contains the MACSYMA commands necessary 
+to run the program and to read the data (most often given in a separate file). 
+The data are put into a file with the use of MACSYMA assignment
+statements.
+This file is read before the function SYMMETRY is called (with IND1 set
+to 1).
+
+\nopagebreak
+\noindent
+{\bf (2) ~Interactive mode}:
+
+\nopagebreak
+This mode is invoked by calling SYMMETRY with IND1 set to zero.
+It is only useful for single equations or fairly simple systems, e.g.
+for equations of rather low order of derivation.
+All parameters can be controlled interactively.
+The program will prompt for the ten items listed above under 'Input data'.
+
+\nopagebreak
+If info\_given is set to true, the
+program will prompt the user to put in the explicit forms of all the $\eta 's$
+and the $\varphi 's.$ 
+If for some of these functions no explicit information is available yet, 
+then one simply submits their names, e.g. eta1, phi1, etc. 
+The array notation is no longer allowed when info is given,
+one has to use the 'concatenated' notation! 
+Information about dependencies must be given with a DEPENDS statement
+before calling the
+function SYMMETRY, otherwise dependencies have to be stated explicitly as
+arguments of the functions.
+
+\pagebreak
+\subsection{Output data}
+At the end of the computation the determining equations are not 
+automatically printed
+but instead they are stored in a list of determining equations called LODE. 
+A printout of the determining equations can be obtained with the command 
+PRINTEQN(LODE).
+
+\nopagebreak
+For convenience, the function PRINTEQN is provided separately under the
+name PRINTEQN.MAX (see further). 
+This allows to reprint a previously saved list of 
+determining equations (LODE).
+If one wishes to use any other of the special functions described in 
+Section 3.2 separately, then SYMMETRY must be called first with input
+data consisting only of the $p, q$ and with $0$ assigned to $m$.
+
+\nopagebreak
+Table 3 summarizes the information available at the end of
+the computation and how to access it. 
+
+\nopagebreak
+\begin{center}
+\begin{tabular}{||l||l|l|l||} \hline \hline
+\multicolumn{4}{||c||}{\em Table 3 $\;\;\;$ Information available at the end
+of the computation}  \\ \hline
+Identifier   &  Type & Printout & 
+$\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;$Contents \\ \hline \hline 
+LODE & List & printeqn(lode);  
+& List of the determining equations   \\ \hline
+PSI  & Array & listarray(psi); 
+& $\displaystyle \psi^{J}_{l}$ evaluated during the computation   \\ \hline 
+ALGSOLS & List & printeqn(algsols); 
+& Algebraic solution of the equations  \\ 
+      &     &  & $\Delta^{i}=0$ for the variables $v^i$ \\ \hline
+DIFSUB & Array & listarray(difsub); &
+Substitutions used to eliminate the $v^i$ \\ 
+      &        &  & and their derivatives  \\ \hline 
+ETA & Array & listarray(eta); & Components of ETA \\ \hline
+PHI & Array & listarray(phi); & Components of PHI \\ \hline \hline
+\end{tabular}
+\end{center}
+
+\nopagebreak
+\subsection{Type of systems}
+
+\nopagebreak
+As indicated previously, the program can be applied to systems of
+$m$ differential equations of order $k$, with $p$ independent and $q$
+dependent variables, where $m, k, p$ and $q$ are arbitrary positive
+integers.  
+Besides limitations due to allowable computer
+memory and CPU time, the main restriction imposed on the original system
+(\ref{orgsystem}) is related to the substitution procedure described 
+in step (3) of Section 2.  
+Indeed, it must be possible for MACSYMA to solve
+the system algebraically for the $v^i$, as in (\ref{vi}).
+For instance, this might prevent the application of the program
+to a system involving five-fold nested radicals of the $u^{l}_{J}.$
+Note, however, that in many applications, difficulties of this
+type can be avoided by a judicious choice of the $v^{i}.$
+It is important to emphasize that the individual
+equations composing the system need not be polynomial in
+the $x_i, u^l$ and $u^{l}_{J}.$  
+
+\pagebreak
+If only multiplicative and additive combinations of powers (not necessarily
+integer ones) of the $u^{l}_{J}$ appear in (\ref{prolongationonsystem})
+after the substitution procedure, then the determining equations can be used 
+directly. 
+If irrational or transcendental functions of the $u^{l}_{J}$ appear in 
+(\ref{prolongationonsystem}), because they were present in the
+original differential 
+equations or they were introduced during the computations, then the
+determining equations in the output will also contain some of the $u^{l}_{J}$
+in a irrational or transcendental way. In that case, the user has the task
+of obtaining the final list of independent determining equations from the
+output.
+
+\nopagebreak
+The system of differential equations for which one wants to compute the
+determining equations may contain arbitrary parameters and even arbitrary
+functions of the variables $x_i$ and $u^l$.  However, names for these 
+parameters or functions should not be in conflict
+with any other identifiers used in the program: in particular, $I, J, L,
+M, P, Q $ and $E1, E2, ... , V1, V2, ... $ may NOT be used. 
+Note that MACSYMA is not sensitive to cases, e.g. v1 is the same as V1, etc.
+For arbitrary functions, the dependencies must be declared with the help 
+of a DEPENDS statement before calling SYMMETRY.
+
+\nopagebreak
+The program assumes that the $u^l$ are functions from ${\R}^p \mapsto \R$.
+If a system of differential equations contains complex valued dependent
+variables, i.e. functions from ${\R}^p \mapsto \C$, the decomposition 
+into real and imaginary parts must be made before using the program 
+(see Section 4).
+
+In entering the original system of differential equations,
+any use of C1, C2, ... , D1, D2, ... , must be avoided since it may 
+confuse MACSYMA which uses these symbols to denote command and display lines, 
+respectively. Furthermore, Greek letters should be avoided 
+(for instance 'beta' refers to the Beta function and
+'gamma' to the Gamma function). Before using any special character quickly 
+check the index of \cite{macsymamanual,macsymausersguide} to verify
+if the name or symbol does not interfere with a function or command name
+in MACSYMA.
+
+\nopagebreak
+When the feedback mechanism is used, avoid any confusing 
+between symbols and parameters occurring in the original equations and those 
+used in the explicit forms for the $\eta 's$ and $\varphi 's.$
+
+\nopagebreak
+Note that MACSYMA starts
+the label for an array at $0$. For instance, the first component of the array 
+ETA is ETA[0]. Precautionary, we have assigned the 
+value $0$ to the first components of such arrays. 
+
+\pagebreak
+\section{Example: The Karpman Equations}
+
+\nopagebreak
+This example shows how the program SYMMGRP.MAX can be used in batch mode. 
+It also illustrates the feedback mechanism for solving 
+the determining equations.
+
+\nopagebreak
+The Karpman equations \cite{karpman1} describe the effect of modulation 
+instability of a high frequency (whistler) wave due to 
+its resonant parametric interaction with a low frequency wave in a plasma.
+The normalized complex amplitude $\psi$ of the whistler wave and the particle
+density $\nu$ of the plasma are given by the nonlinear system:
+\begin{eqnarray}
+i ( {\psi}_t + w_1 \; {\psi}_z ) + \frac{1}{2}  
+[ s_1 \; ( \psi_{xx} + \psi_{yy} ) + s_2\; \psi_{zz}] - a_11 \; \nu \; \psi 
+& = & 0, \nonumber \\
+\nu_{tt} - {(w_{2})}^2 \; ( \nu_{xx} + \nu_{yy} + \nu_{zz} ) 
+- a_2 \; ( {\left| \psi \right|}^{2}_{xx} 
++ {\left| \psi \right|}^{2}_{yy} + {\left| \psi \right| }^{2}_{zz} ) &= & 0, 
+\label{karpmaneqs}
+\end{eqnarray}
+where $ a_{1}, a_{2} , s_{1} , s_{2} , w_{1} $ and $w_{2}$ are just constants.
+
+\nopagebreak
+Since the program cannot handle the complex variable $\psi$, 
+we split it in its real and imaginary parts by putting
+\begin{equation}
+\psi = \rho (x,y,z,t) \exp ( i \phi ( x,y,z,t) ) .
+\label{realandimag}
+\end{equation}
+
+\nopagebreak
+Thus, 
+\begin{eqnarray}
+\phantom{2} \!\!\!\!\!\!\!\!\!\! {\rho}_t \!+\! w_1 {\rho}_z 
+\!+\! \frac{1}{2} \left[ s_1 ( 2 \rho_{x} \phi_{x} \! +\! 2 \rho_{y} \phi_{y} 
+\! + \! \rho \phi_{xx} \! +\! \rho \phi_{yy} )
+\! + \! s_2 ( 2 \rho_{z} \phi_{z} \! + \! \rho \phi_{zz} ) \right]\!\!\!\!\!
+&=& \!\!\!\!\! 0,\phantom{22}
+\nonumber \\
+\phantom{2} \!\!\!\!\!\!\!\!\!\! {\phi}_t 
+\! + \! w_11 {\phi}_z \! -\! \frac{1}{2}  
+\left[ s_1 ( \frac{ \rho_{xx} }{ \rho } \! +\! \frac{ \rho_{yy} }{ \rho } 
+\! - \! {\phi_{x}}^2 \! -\! {\phi_{y}}^2 )  
+\! +\! s_2 ( \frac{ \rho_{zz} }{ \rho } \! -\! {\phi_{z}}^2 ) \right] 
+\! +\! a_1 \nu \!\!\!\!\! &=& \!\!\!\!\! 0, \label{nkarpmaneqs} \\
+\phantom{2} \!\!\!\!\!\!\!\!\!\! \nu_{tt} \! -\! {(w_{2})}^2 ( \nu_{xx} 
+\! +\! \nu_{yy} \! +\! \nu_{zz} ) 
+\! -\! 2 a_2 \rho ( \rho_{xx} \! +\! \rho_{yy} \! +\! \rho_{zz} )
+\! -\! 2 a_2 ( {\rho_{x}}^2 \! +\!  {\rho_{y}}^2 
+\! +\! {\rho_{z}}^2 ) \!\!\!\!\! &=& \!\!\!\!\! 0.\phantom{22}
+\nonumber
+\end{eqnarray}
+
+\nopagebreak
+For the system (\ref{nkarpmaneqs})
+the MACSYMA calculations are fairly lengthy and involved. On some
+computers, in particular on PCs, it may not possible to run all the equations 
+at once.
+
+\nopagebreak
+Even on main frame computers it takes a long time.
+For example, on a VAX 8600, 
+the determining equations in simplified form were obtained in about 4 hours
+of CPU time.
+On a VAX 8650 with a central memory of 96 Megabyte, this same calculation took
+3 hours of CPU time.
+The number of determining equations before simplification was
+2321. After automatic simplifications only 69 determining equations were left.
+The peak working size being limited to about 16400 pages,
+MACSYMA 412.61 needed 100 garbage collections due to 
+dynamic 0 and 1 space overflow.
+
+\pagebreak
+For users of less sophisticated computers or when working with still larger
+systems of equations, the strategy is to break up the problem in 
+smaller pieces. 
+The idea is to obtain information about independencies as soon as possible 
+and to submit that information with a subsequent run.
+This is done with a judicial setting of the parameters and with the
+feedback mechanism. We illustrate this in all details for the
+system (\ref{nkarpmaneqs}).
+
+\nopagebreak
+For this example the number of independent variables is $p=4$, 
+the number of dependent variables is $q = 3$ and there are clearly $m=3$ 
+equations.
+The correspondences are as follows:
+\begin{equation}
+\begin{array}{rclcrcl}
+x & \longmapsto & x[1], & \quad \quad & \rho  & \longmapsto & u[1] \; ,\\ 
+y & \longmapsto & x[2], & \quad \quad &  \phi & \longmapsto & u[2] \; ,\\
+z & \longmapsto & x[3], & \quad \quad &  \nu &  \longmapsto & u[3] \; , \\ 
+t & \longmapsto & x[4]. & \quad \quad  & \quad & \quad & \quad  \\ 
+\end{array}
+\end{equation}
+This permits to write the equations (\ref{nkarpmaneqs}) 
+in a standard form accepted by the program (see below under "e1" 
+through "e3").
+Finally, one selects the variables needed for the substitution 
+(elimination) process:
+these will be $\rho_t , \phi_t$ and $\nu_{tt} .$
+In the notation of the program, these variables are called 
+$v1, v2$ and $v3$.
+
+\nopagebreak
+The 'translation' of the equations (\ref{nkarpmaneqs}) 
+is given in the data file {\it KARPMANRUN1.DAT} below. 
+For example, $ \rho_{t}$ becomes $u[1,[0,0,0,1]],$ etc.
+
+\nopagebreak
+The batch file containing the MACSYMA commands to run 
+SYMMGRP.MAX is called {\em KARPMANRUN1.COM}. It contains:
+\vskip 1pt
+batchload("symmgrp.max"); \par
+writefile("karpmanrun1.412"); \par
+batch("karpmanrun1.dat"); \par
+symmetry(1,0,0); \par
+printeqn(lode); \par
+save("lodekarpmanrun1.lsp",lode); \par
+closefile(); \par
+quit(); \par
+
+\nopagebreak
+\noindent
+For every new run this batch file has to be slightly updated by changing
+'run1' into 'run2', etc.
+As for its contents, apart from saving a transcript of the session in
+{\em KARPMANRUN1.412}, we also save the list of determining equations (lode)
+as the LISP file {\em LODEKARPMANRUN1.LSP}, 
+in case one wants to use these equations in a separate MACSYMA session. 
+In turn, the above command file batches the file {\em KARPMANRUN1.DAT} with the
+data for the first run:
+\nopagebreak
+\vskip 2pt
+p : 4 \$ \par
+q : 3 \$ \par
+m : 3 \$ \par
+\pagebreak
+parameters : [a1,a2,s1,s2,w1,w2] \$ \par
+warnings : true \$ \par
+sublisteqs : [e1] \$ \par
+info\_given : false \$ \par
+highest\_derivatives : 1 \$ \par
+e1 : u[1,[0,0,0,1]]+w1*u[1,[0,0,1,0]]+(1/2)*(s1*(2*u[1,[1,0,0,0]] \par
+$\;\;\;\;\;$
+*u[2,[1,0,0,0]]+2*u[1,[0,1,0,0]]*u[2,[0,1,0,0]]+u[1]*u[2,[2,0,0,0]] \par
+$\;\;\;\;\;$
++u[1]*u[2,[0,2,0,0]])+s2*(2*u[1,[0,0,1,0]]*u[2,[0,0,1,0]] \par
+$\;\;\;\;\;$
++u[1]*u[2,[0,0,2,0]])); \par
+e2 : u[2,[0,0,0,1]]+w1*u[2,[0,0,1,0]]-(1/2)*(s1*(u[1,[2,0,0,0]]/u[1] \par
+$\;\;\;\;\;$
++u[1,[0,2,0,0]]/u[1]-u[2,[1,0,0,0]]\^{}2 -u[2,[0,1,0,0]]\^{}2 ) \par
+$\;\;\;\;\;$
++s2*(u[1,[0,0,2,0]]/u[1]-u[2,[0,0,1,0]]\^{}2 ))+a1*u[3]; \par
+e3 : u[3,[0,0,0,2]]- v2\^{}2 *(u[3,[2,0,0,0]]+u[3,[0,2,0,0]]
++u[3,[0,0,2,0]]) \par
+$\;\;\;\;\;$
+-2*a2*u[1]*(u[1,[2,0,0,0]]+u[1,[0,2,0,0]]+u[1,[0,0,2,0]]) \par
+$\;\;\;\;\;$
+-2*a2*(u[1,[1,0,0,0]]\^{}2 +u[1,[0,1,0,0]]\^{}2 
++u[1,[0,0,1,0]]\^{}2 ); \par
+v1 : u[1,[0,0,0,1]]; \par
+v2 : u[2,[0,0,0,1]]; \par
+v3 : u[3,[0,0,0,2]]; \par
+\vskip 2pt
+\noindent
+\nopagebreak
+All the parameters a1, a2, .... w1, are supposed to be nonzero and 
+may be canceled (as factors) in simplifications.
+Since we selected only the first equation of the system (however substituting
+from the entire system !) and since we extract only the simple determining 
+equations (from the coefficients of the highest derivatives in the 
+prolongation), this run takes only 20 minutes of CPU time on a VAX 8600.
+
+\nopagebreak
+The simplifications implemented in the program reduce the number of 
+determining equations from 20 to 6 single term equations. They are saved in
+KARPMANRUN1.412 and these equations reveal that
+$eta4$ only depends on x[4] as listed in Table 4.
+'No' stands for 'not dependent on' and the subscript {\em 1} refers to the 
+information obtained from the {\em first} run, etc.
+
+\nopagebreak
+\begin{center}
+\begin{tabular}{||c||c|c|c|c|c|c|c||} \hline \hline
+\multicolumn{8}{||c||}{\em Table 4 $\;\;\;$ Dependencies for the Karpman Case} 
+\\ \hline
+     & x[1]   & x[2] &  x[3]   & x[4]    & u[1]   & u[2]   & u[3] \\ \hline 
+\hline
+eta1 &$no_4$ &       & $no_4$  & $no_4$  & $no_3$ & $no_3$ & $no_2$  \\ \hline
+eta2 &       & $no_4$& $no_4$  & $no_4$  & $no_3$ & $no_3$ & $no_2$  \\ \hline
+eta3 &$no_4$ & $no_4$& $no_4$  & $no_4$  & $no_3$ & $no_3$ & $no_2$  \\ \hline
+eta4 &$no_1$ & $no_1$& $no_1$  & $no_4$  & $no_1$ & $no_1$ & $no_1$  \\ \hline
+\hline
+phi1 &      &        &         &         &        & $no_3$ & $no_2$  \\ \hline
+phi2 &      &        &         &         &$no_3$  &${\rm linear}_3$&$no_3$
+\\ \hline
+phi3 &      &        &         &         &$no_4$  &$no_4$ & ${\rm linear}_4$
+\\ \hline \hline
+\end{tabular}
+\end{center}
+\vskip 2pt
+\pagebreak
+For the second run, we provide the program with this information and
+we ask for the determining equations coming from the
+second prolongation applied to e2 and e3 only.
+We modify a few lines in the data file: 
+\vskip 2pt
+sublisteqs : [e2,e3] \$ \par
+info\_given : true \$ \par
+depends([eta1,eta2,eta3,phi1,phi2,phi3],[x[1],x[2],x[3],x[4],u[1],u[2],u[3]]);
+\par
+depends(eta4,x[4]); \par
+\vskip 2pt
+\nopagebreak
+\noindent
+All the remaining lines are the same and we save the updated file as
+{\em KARPMANRUN2.DAT}. We run the program again with a batch
+file similar to the one used for the first run.
+After 1 h. 15 min. of CPU time, four determining equations are obtained, 
+they give new information about the dependencies (see Table 4).
+\vskip 2pt
+For the third run, in {\em KARPMANRUN3.DAT} we
+update the information about the dependencies 
+(by changing dependency declarations as shown before) 
+and we ask the program for all the determining equations coming from 
+the first equation: 
+\vskip 2pt
+sublisteqs : [e1]\$ \par
+highest\_derivatives : all\$ \par
+\vskip 2pt
+\noindent
+In 6 min. of CPU time on the VAX 8600, the program extracted 130 determining 
+equations and automatically simplified them to 26 equations.
+The info from the first 7 (single term) equations is added to Table 4.
+\nopagebreak
+At this point we want to solve some of the 19 remaining equations, 
+to prepare the data for the next run. 
+\nopagebreak
+The determining equations are all linear and homogeneous. So they 
+usually do not require any solution techniques beyond a straightforward 
+separation of variables, occasionally a simple integration,
+at worst an application of the method of the characteristics.
+\nopagebreak
+We first look for more information on dependencies.
+Since $phi1$ and $phi2$ are independent of $u[3]$ the (longest) equation, i.e.,
+\begin{eqnarray}
+&2&\!\!\! w1 \; \frac{\partial phi1}{\partial x[3]} 
++ s2 \; u[1] \; \frac{\partial^2 phi2}{\partial x[3]^2} 
++ s1 \; u[1] \; \frac{\partial^2 phi2}{\partial x[2]^2} \nonumber \\
+&+&\!\!\! s1 \; u[1] \; \frac{\partial^2 phi2}{\partial x[1]^2} 
++ 2 \; \frac{\partial phi1}{\partial x[4]} 
+- 2 a1 \; u[3] \; \frac{\partial phi1}{\partial u[2]} = 0, 
+\label{eqdphi1du2}
+\end{eqnarray}
+implies that $phi1$ is also independent of $u[2]$.
+With
+\begin{equation}
+u[1]^2 \frac{\partial phi2}{\partial u[1]} 
++ \frac{\partial phi1}{\partial u[2]} = 0,
+\label{eqdphi2du1}
+\end{equation}
+we have that $phi2$ is independent of $u[1]$. 
+\vskip 1pt
+\pagebreak
+\noindent
+Next,
+\begin{equation}
+u[1] \frac{\partial^2 phi2}{\partial u[2]^2} 
++ \frac{\partial phi1}{\partial u[2]} = 0,
+\label{phi2linear}
+\end{equation}
+gives that $phi2$ is linear in $u[2]$. We add these three conclusions 
+to Table 4.
+
+\nopagebreak
+From the three remaining equations (with only two terms) we learn that
+\begin{eqnarray}
+\frac{\partial eta3}{\partial x[1]}& = & - 
+\left( \frac{s2}{s1} \right) \frac{\partial eta1}{\partial x[3]},
+\label{grad1} \\
+\frac{\partial eta3}{\partial x[2]}& = & 
+-\left( \frac{s2}{s1} \right) \frac{\partial eta2}{\partial x[3]},
+\label{grad2} \\
+\frac{\partial eta2}{\partial x[1]} & =& -\frac{\partial eta1}{\partial x[2]}. 
+\label{grad3} \\ \nonumber
+\end{eqnarray}
+
+\nopagebreak
+Comparison of three equations with 4 terms each, such as
+\begin{equation}
+\frac{\partial phi2}{\partial u[2]} 
++ u[1] \frac{\partial^2 phi2}{\partial u[1] \partial u[2]} 
++ \frac{\partial eta4}{\partial x[4]}
+- 2 \frac{\partial eta3}{\partial x[3]} = 0,
+\label{eq1phi2}
+\end{equation}
+leads to 
+\begin{equation}
+\frac{\partial eta3}{\partial x[3]}= \frac{\partial eta2}{\partial x[2]} = 
+\frac{\partial eta1}{\partial x[1]}.
+\label{grad4}
+\end{equation}
+Upon integration of (\ref{eq1phi2}) we get
+\begin{equation}
+phi2 = (2 \frac{\partial eta1}{\partial x[1]} 
+- \frac{\partial eta4}{\partial x[4]} ) \; u[2]  
++ f2 (x[1], x[2], x[3], x[4]),
+\label{phi2}
+\end{equation}
+where  $f2$ will be determined later.
+\vskip 1pt
+\noindent
+Substitution of (\ref{phi2}) into
+\begin{equation}
+u[1] \frac{\partial phi2}{\partial u[2]} 
+- u[1] \frac{\partial phi1}{\partial u[1]} + phi1 
++ u[1] \frac{\partial eta4}{\partial x[4]}
+- 2 u[1]  \frac{\partial eta1}{\partial x[1]}
+= 0
+\label{eq1phi1}
+\end{equation}
+and integration yields
+\begin{equation}
+phi1 = f1(x[1], x[2], x[3], x[4]) \; u[1],
+\label{phi1}
+\end{equation}
+where $f1$ will be determined later.
+\vskip 1pt
+
+\nopagebreak
+To save time we shall not solve the rest of the equations for 
+$eta1, eta2, eta3$ and $phi3$ 
+but rather submit the above information and carry out the next run.
+
+\nopagebreak
+Hence, the data file {\em KARPMANRUN4.DAT} contains
+the information from Table 4 and also the lines
+\vskip 2pt
+\pagebreak
+sublisteqs:[all] \$ \par
+depends([f1,f2],[x[1],x[2],x[3],x[4]]); \par
+phi1 : f1*u[1]; \par
+phi2 : (2*diff(eta1,x[1])-diff(eta4,x[4]))*u[2]+f2; \par
+gradef(eta3,x[1],-(s2/s1)*diff(eta1,x[3])); \par
+gradef(eta3,x[2],-(s2/s1)*diff(eta2,x[3])); \par
+gradef(eta2,x[1],-diff(eta1,x[2])); \par
+gradef(eta3,x[3],diff(eta1,x[1])); \par
+gradef(eta2,x[2],diff(eta1,x[1])); \par
+\vskip 2pt
+\noindent
+\nopagebreak
+After 28 min. of CPU time, 30 simple determining equations are obtained
+(see 'Test Run Output'). 
+The simplifications described in the outline of the program 
+actually reduced 249 determining equations to 30 this time.
+\vskip 1pt
+\noindent
+Since $s1 \not= s2$, 10 of these equations together with the
+conditions (\ref{grad1})-(\ref{grad3}) and (\ref{grad4}) 
+lead to the information listed in Table 4.
+
+\nopagebreak
+A quick inspection of the remaining equations in 'Test Run Output'
+allows to conclude that $f1 = k6 $ is constant.
+Hence, with (\ref{phi1}) we get
+\begin{equation}
+phi1 = k6 \; u[1] \label{phi1new}.
+\end{equation}
+
+\nopagebreak
+Similarly, (\ref{phi2}) simplifies into
+\begin{equation}
+phi2 = f2(x[4]) \label{phi2new}.
+\end{equation}
+Further, we obtain $phi3$ up to an unknown function 
+$f4$,
+\begin{equation}
+phi3 = 2 \; k6\; u[3] + f4(x[1],x[2],x[3],x[4]).
+\label{phi3}
+\end{equation}
+We also find that $eta1$ is linear in $x[2]$, i.e.,
+\begin{equation}
+eta1 = k1 \; x[2] + k2,
+\label{eta1}
+\end{equation}
+where $k1$ and $k2$ are constants. 
+The equations (\ref{grad1})-(\ref{grad3}) and (\ref{grad4}) 
+then determine
+\begin{eqnarray}
+eta2 & =& - k1 \; x[1] + k3,
+\label{eta2} \\
+eta3 &=& k4,
+\label{eta3} \\
+eta4 &=& k5.
+\label{eta4} \\ \nonumber
+\end{eqnarray}
+\nopagebreak
+\noindent
+We again modify the previous data file, to account for the info
+in Table 4, the forms of the eta's and phi's and the dependencies of 
+$f2$ and $f4$:
+\vskip 2pt
+\pagebreak
+depends(f2,x[4]); \par
+depends(f4,[x[1],x[2],x[3],x[4]]); \par
+\par
+eta1 : k1*x[2]+k2; \par
+eta2 : -k1*x[1]+k3; \par
+eta3 : k4; \par
+eta4 : k5; \par
+phi1 : k6*u[1]; \par
+phi2 : f2; \par
+phi3 : 2*k6*u[3]+f4; \par
+\noindent
+and with this file {\em KARPMANRUN5.DAT} we start the last run.
+Only 2 determining equations are left 
+in {\em KARPMANRUN5.412}:
+\begin{equation}
+2 \; u[3]\; a1 \; k6 + a1 \; f4
++ \frac{\partial f2}{\partial x[4]} = 0,
+\label{k6}
+\end{equation}
+\begin{equation}
+  {w2}^2 \frac{\partial^2 f4}{\partial x[3]^2} 
++ {w2}^2 \frac{\partial^2 f4}{\partial x[2]^2} 
++ {w2}^2 \frac{\partial^2 f4}{\partial x[1]^2} 
+-\frac{\partial^2 f4}{\partial x[4]^2} = 0.
+\label{f4}
+\end{equation}
+The first one requires that $k6=0$, hence, $phi1 = 0, $ and also
+\begin{equation}
+\frac{\partial f2}{\partial x[4]} = - a1 \; f4.
+\label{f4new}
+\end{equation}
+Since $f2$ depends only on $x[4]$, $f4$ must be independent of 
+$x[1], x[2]$ and $x[3]$. 
+As a consequence of (\ref{f4}), $f4$ is linear in $x[4]$ and with
+(\ref{f4new}) the final solution is known:
+\begin{eqnarray}
+f2 &=& a1 \; k7 \; {x[4]}^2 + a1 \; k8 \; x[4] + k9, \label{f2final} \\
+f4 &=& - 2 \; k7 \; x[4] - k8, \label{f4final} \\ \nonumber
+\end{eqnarray}
+where $k7, k8$ and $k9$ are free constants. 
+These functions determine the final form of $phi2$ and $phi3$ in
+(\ref{phi2new}) and (\ref{phi3}).
+\vskip 2pt
+One could submit these data for verification. We have done so and no
+determining equations were left, as expected. 
+This final test of the solution took only 1 min. 30 sec. of CPU time.
+
+\nopagebreak
+Let us summarize. The general solution of the determining equations leads
+to a Lie algebra with 8 infinitesimal generators. In terms of the original 
+independent variables $x, y, z, t$ and the dependent variables $\rho, \phi $ 
+and $\nu$, the vector field reads:
+\begin{equation}
+\alpha = \eta^{x} \frac{\partial}{\partial x}
++ \eta^{y} \frac{\partial}{\partial y}
++ \eta^{z} \frac{\partial}{\partial z}
++ \eta^{t} \frac{\partial}{\partial t}
++ \varphi^\rho \frac{\partial}{\partial \rho}
++ \varphi^\phi  \frac{\partial}{\partial \phi}
++ \varphi^\nu  \frac{\partial}{\partial \nu} ,
+\label{coefvectorfield}
+\end{equation}
+\pagebreak
+\noindent
+where
+\begin{equation}
+\begin{array}{rclcrcl}
+\eta^{x} & = & k_1 \; y + k_2 & \quad , \quad & \varphi^{\rho} & = & 0 \; , \\
+\eta^{y} & = & - k_1 \; x + k_3 & \quad ,  \quad
+& \varphi^{\phi} & = & k_7 \; {\rm a_1} \; t^2 +  k_8 \; {\rm a_1} \; t 
++ k_9 \; ,\\
+\eta^{z} & = & k_4 &\quad ,\quad 
+& \varphi^{\nu} & = & - 2 \; k_7 \;t - k_8 \; , \\
+\eta^{t} & = & k_5 \; . &\quad \quad & \quad & \quad & \quad 
+\end{array}
+\end{equation}
+\nopagebreak
+\noindent
+Here $k_1$ through $k_9$ are independent arbitrary constants ($k_6 = 0$
+making $\varphi^{\rho} = 0 $).
+Recall that  ${\rm a_1}$ is a parameter in the Karpman equations 
+(\ref{karpmaneqs}).
+The 8 infinitesimal generators for these equations are 
+\samepage{
+\begin{equation}
+\begin{array}{rclcrcl}
+P_1 & = & \partial_x & \quad , \quad & L_3 &=& y \partial_x - x \partial_y 
+\; ,\\
+P_2 & = & \partial_y &\quad ,\quad & R_1 & = & \partial_{\phi} \; , \\
+P_3 & = & \partial_z & \quad ,\quad &R_2 & = & a_1\;  t \; \partial_{\phi} - 
+\partial_{\nu} \; , \\
+P_4 & = & \partial_t &\quad , \quad &R_3 & = & a_1\;  t^2 \; \partial_{\phi} 
+- 2 t\; \partial_{\nu} \; .
+\end{array}
+\end{equation} }
+
+\section{Conclusion}
+
+We presented a MACSYMA program that can assist in the calculation of the
+symmetry group of a system of differential equations. Among various features
+of this program, let us emphasize a few.\par
+\noindent
+(1) The program is applicable to a system of $m$ equations of order $k$, with
+$q$ unknowns and $p$ independent variables, where all these labels are
+arbitrary positive integers. \par
+\noindent
+(2) The output is a system of determining equations that is free 
+of repetition and partially solved in the sense that higher order equations 
+which are differential consequences of lower order ones are automatically 
+eliminated. \par
+\noindent
+(3) The parameters 'sublisteqs' and 'highest\_derivatives' allow
+partial information to be extracted very rapidly. 
+These parameters help prevent MACSYMA
+running out of space (and/or time) when very large systems 
+are submitted. \par
+\noindent
+(4) Warnings remind the user about
+division by parameters that were listed as different from  zero. \par
+\noindent
+(5) The feedback mechanism allows the determining equations 
+to be solved step
+by step on the computer, hence avoiding human error in the algebraic 
+simplifications. \par
+\noindent
+(6) The program can be used to test solutions of the determining equations 
+and hence detect errors in the literature on the subject. \par
+\noindent
+(7) The program can be used interactively and in batch mode and the
+amount of messages that are printed out can be adequately controlled. \par
+\noindent
+(8) The program needs very little data and is straightforward to use
+provided the user has access to MACSYMA. \par
+\noindent
+Application of this program to determine the symmetry group of the
+Karpman equations has been straightforward and has lead to a results.
+The development of a MACSYMA program that solves the determining
+equations in part is planned for the future. 
+Upon modification of the algorithm, the
+program can be extended to the computation of more general 
+Lie-B\"{a}cklund transformation groups \cite{andersonibragimovbook}.
+
+\vskip 2pt
+\section*{Notes added in Proof}
+\vskip 2pt
+\begin{itemize}
+\item One new parameter must be added to the input data as described in 
+subsection 3.3 of this paper.
+The parameter {\em subst\_deriv\_of\_vi}: true, controls the 
+substitution of the partial derivatives of the $v^i$ in the equation (12). 
+These derivatives are given by (14).
+
+In some cases it is not possible to select the $v^i$ in such a way that
+the differential consequences would not reintroduce lower order derivatives 
+of the $v^i$, hence causing a loop!  Therefore, we have make the substitution 
+of the partial derivatives of the $v^i$ optional. If only the $v^i$ should be 
+replaced and not their derivatives, one puts 
+{\em subst\_deriv\_of\_vi} : false.
+
+The resulting system of determining equations is `equivalent' with the one
+obtained using the substitution of all the partial derivatives of the $v^i$.
+In the later case the system of determining equations may be somewhat simpler,
+but the extra substitutions consume time.
+
+\item The authors became aware of yet another REDUCE program for the 
+calculation of Lie symmetries (including Lie-B\"{a}cklund symmetries) 
+developed by Clara Maria Nucci at the School of Mathematics, Georgia Institute 
+of Technology, Atlanta, Georgia. 
+\end{itemize}
+
+\vfill
+\newpage
+\section*{Acknowledgements}
+
+This work was partially supported by research grants from the Natural
+Science and Engineering Research Council of Canada and the "FCAR du
+Gouvernement du Qu\'{e}bec". B.C. acknowledges a fellowship
+awarded by NSERC of Canada. W.H. is grateful for support from
+the Air Force Office of Scientific Research under Grant No. 85-NM-0263.
+He also thanks the Centre de Recherches Math\'{e}matiques for their hospitality
+and support.
+The authors thank D. Rand for help with MACSYMA, and 
+A. K. Head, D. Holm, M. Homer, A. Mikhailov, P. Olver, G. Prince, W. Sarlet and
+S. Steinberg for bringing various software packages to their attention.
+M. Grundland and D. Levi are gratefully acknowledged for using the
+program extensively and suggesting improvements.
+
+\vfill
+\newpage
+
+\begin{thebibliography}{99}
+
+\bibitem{olverbook} {\sc P.J. Olver},\, 
+{\em Applications of Lie Groups to Differential Equations}\, 
+(Springer Verlag, New York, 1988).
+
+\bibitem{macsymamanual} {\em MACSYMA Reference Manual}, Version 13,\,
+Computer Aided Mathematics Group\, (Symbolics, Burlington, MA, 1989).
+
+\bibitem{macsymausersguide} {\em MACSYMA User's Guide},\,
+Computer Aided Mathematics Group\, (Symbolics, Burlington, MA, 1988).
+
+\bibitem{amesbook} {\sc W.F. Ames},\, {\em  Nonlinear Partial Differential
+Equations in Engineering}\, (Academic Press, New York, 1972).
+
+\bibitem{blumancolebook} {\sc G.W. Bluman} and {\sc J.D. Cole},\, 
+{\em Similarity Methods for Differential Equations} \,
+(Springer, New York, 1974).
+
+\bibitem{millerbook} {\sc W. Miller},\, {\em Symmetry and Separation of
+Variables} \, (Reading, MA, 1977).
+
+\bibitem{andersonibragimovbook} {\sc R.L. Anderson} and {\sc N.H. Ibragimov},\,
+{\em Lie-B\"{a}cklund Transformations in Applications},\, Studies in 
+Applied Mathematics {\bf 1} (SIAM, Philadelphia, 1979).
+
+\bibitem{ovsiannikovbook} {\sc L.V. Ovsiannikov},\, {\em Group Analysis of 
+Differential Equations} \, (Academic Press, New York, 1982).
+
+\bibitem{winternitzlecnotes} {\sc P. Winternitz},\, 
+in: K.B. Wolf,\, {\em Nonlinear Phenomena},\, Lecture Notes in Physics 189 \, 
+(Springer Verlag, New York, 1983) p. 263.
+
+\bibitem{ibragimovbook} {\sc N.H. Ibragimov},\, {\em Transformation
+Groups Applied to Mathematical Physics} \, (Reidel, Boston, 1985).
+
+\bibitem{kalninsbook} {\sc E.G. Kalnins},\, {\em Separation of Variables for
+Riemannian Spaces of Constant Curvature}\, 
+(Longman, Essex, 1986).
+
+\bibitem{sattingerweaverbook} {\sc D.H. Sattinger} and {\sc O.L. Weaver},\,
+{\em Lie Groups and Algebras with Applications to Physics, Geometry, and
+Mechanics}\, (Springer Verlag, New York, 1986).
+
+\bibitem{fushchichnikitin} {\sc V.I. Fushchich} and {\sc A.G. Nikitin},\, 
+{\em Symmetries of Maxwell Equations}\,
+(Reidel, Dordrecht, 1987).
+
+\bibitem{leviwinternitzbook} {\sc D. Levi} and {\sc P. Winternitz},\, Eds.,\,
+{\em  Symmetries and Nonlinear Phenomena}\,
+(World Scientific, Singapore, 1988).
+
+\newpage
+
+\bibitem{schwarzsiam} {\sc F. Schwarz},\, 
+SIAM Review 30 (1988) 450.
+
+\bibitem{blumankumeibook}  
+{\sc G.W. Bluman} and {\sc S. Kumei},\, 
+{\em Symmetries and Differential Equations}\,
+(Springer Verlag, New York, 1989).
+
+\bibitem{rogersamesbook} {\sc C. Rogers} and {\sc W.F. Ames},\, 
+{\em Nonlinear Boundary Value Problems in Science and Engineering}\,
+(Academic Press, New York, 1989).
+
+\bibitem{stephanibook} {\sc H. Stephani},\, 
+{\em Differential Equations: Their Solution using Symmetries}\,
+(Cambridge University Press, Cambridge, 1989).
+
+\bibitem{winternitzkluwer} {\sc P. Winternitz},\, 
+in: R. Conte and N. Boccara,\, {\em Partially Integrable Nonlinear 
+Evolution Equations and their Physical Applications}\, 
+(Kluwer, Dordrecht, 1990)\, p. 515
+
+\bibitem{specialissues} {\sc A.M. Vinogradov},\, Ed.,\,
+{\em Symmetries of Partial Differential Equations},\, 
+Part I, Acta Appl. Math. 15, nos. 1 \& 2 (1989);\, 
+Part II, {\em ibid.}\, 16, no. 1 (1989);\, 
+Part III, {\em ibid.}, 16, no. 2 (1989).
+
+\bibitem{schwarzprogram1} {\sc F. Schwarz},\,
+Comput. Phys. Comm. 27 (1982) 179.
+
+\bibitem{schwarzprogram2} {\sc F. Schwarz},\,
+Computing 34 (1985) 91;\, Addendum: Computing 36 (1986) 279.
+
+\bibitem{schwarzprogram3} {\sc F. Schwarz},\,
+Comput. Phys. Comm. 39 (1986) 285.
+
+\bibitem{schwarzmanual} 
+{\sc F. Schwarz}
+{\em The Package SPDE for Determining Symmetries of Partial Differential
+Equations. User's Manual}.\, Distributed with REDUCE 3.3 
+(Rand Corporation, Santa Monica, CA, 1987).
+
+\bibitem{schwarzprogram4} {\sc F. Schwarz},\,
+in: R. JanBen,\, {\em Trends in Computer Algebra},\,
+Lecture Notes in Comput. Sci. 296 \,(Springer Verlag, New York, 1988)\, p. 167.
+
+\bibitem{edelenprogram} {\sc D.G.B. Edelen},
+{\em Isovector Methods for Equations of Balance} (Sijthoff \& Nordhoff,
+Alphen aan de Rijn, 1981).
+
+\bibitem{gragertetalprogram} {\sc P. Gragert, P.H.M. Kersten}
+and {\sc A. Martini}, \,
+Acta Appl. Math. 1 (1983) 43.
+
+\bibitem{kerstenprogram1} {\sc P.H.M. Kersten},\,
+{\em Infinitesimal Symmetries: a Computational Approach},\,
+CWI Tract 34 (Center for Mathematics and Computer Science, Amsterdam, 1987).
+
+\newpage
+
+\bibitem{kerstenprogram2} {\sc P.H.M. Kersten},\,
+{\em Software to Compute Infinitesimal Symmetries of Exterior Differential
+Systems, with Applications},\,
+Acta Appl. Math. 16 (1989) 207.
+
+\bibitem{eliseevprogram} {\sc V.P. Eliseev, R.N. Fedorova} and
+{\sc V.V. Kornyak},\, Comput. Phys. Comm. 36 (1985) 383.
+
+\bibitem{fedorovakornyakprogram1} {\sc R.N. Fedorova} and
+{\sc V.V. Kornyak},\,
+{\em A REDUCE Program for Computing Determining Equations of 
+Lie-B\"{a}cklund Symmetries of Differential Equations}.\,
+Report R11-87-19 (JINR, Dubna, 1987).
+
+\bibitem{fedorovakornyakprogram2} {\sc R.N. Fedorova} and
+{\sc V.V. Kornyak},\, Comput. Phys. Comm. 39 (1986) 93.
+
+\bibitem{fushchichkornyakprogram} {\sc W.I. Fushchich} and
+{\sc V.V. Kornyak},\, J. Symb. Comp. 7 (1989) 611.
+
+\bibitem{wolfprogram} {\sc T. Wolf},\,
+{\em Analytic solutions of differential equations with computer algebra
+systems}.\,
+Preprint 87/5 (Universit\"{a}t Jena, Jena, Germany, 1987).
+
+\bibitem{headprogram} {\sc A.K. Head},\, {\em LIE : A muMATH Program
+for the Calculation of the LIE Algebra of Differential Equations}\,
+(CSIRO Division of Material Sciences, Clayton, Australia, 1990).
+
+\bibitem{vafeadesprogram1} {\sc P. Vafeades},\, {\em Computer Algebraic
+Determination of Symmetries and Conservation Laws of PDEs},\,
+in: E.K. Park,\, {\em Proc. ISMM Int. Symposium on Computer Applications 
+in Design, Simulation and Analysis},\,
+(New Orleans, Louisiana, 1990)\, p. 310.
+
+\bibitem{vafeadesprogram2} {\sc P. Vafeades},\, {\em SYMCON: A MACSYMA
+Package for the Determination of Symmetries and Conservation Laws of PDEs},\,
+submitted to J. Symb. Comp. 8 (1990)
+
+\bibitem{popovprogram} {\sc M.D. Popov},\,
+Izvestiya AN Belor. SSR, Ser. Phys.-Math. 2 (1985) 33.
+
+\bibitem{bocharovprogram} {\sc A.V. Bocharov},\,
+{\em DEliA: A System of Exact Analysis of Differential Equations using
+S. Lie Approach}.\, Report OWIMEX (Program Systems Institute, 
+Pereslavl-Zalessky, USSR, 1989).
+
+\bibitem{bocharovbronsteinprogram} {\sc A.V. Bocharov} and 
+{\sc M.L. Bronstein}, Acta Appl. Math. 16 (1989) 143.
+
+\bibitem{wulfmanprogram1} {\sc D.K. Davison}, 
+{\em MANDO: A Computer Program for Symbolic Manipulation of Differential
+Operators Generating Continuous Transformations}, 
+M.Sc. Thesis (University of the Pacific, Stockton, CA, 1973).
+
+\newpage
+
+\bibitem{wulfmanprogram2} {\sc G.G. Nagao}, 
+{\em DETERMININGEQS: A Computer Program for Aprroximating Lie Generators 
+Admitted by Dynamcical Systems}, 
+M.Sc. Thesis (University of the Pacific, Stockton, CA, 1980).
+
+\bibitem{rosenauschwarzmeierprogram} {\sc P. Rosenau} and 
+{\sc J.L. Schwarzmeier},\, {\em Similarity Solutions of Systems of
+Partial Differential Equations using MACSYMA}.\, 
+Report COO-3077-160 \, MF-94 (Courant Institute of
+Mathematical Sciences, New York University, New York, 1979).
+
+\bibitem{schwarzmeierrosenauprogram} {\sc J.L. Schwarzmeier} and
+{\sc P. Rosenau},\,
+{\em Using MACSYMA to Calculate Similarity Transformations of Partial
+Differential Equations}.\, Report LA-UR \, 88-4157 (Los Alamos 
+National Laboratory, Los Alamos, 1988).
+
+\bibitem{steinbergprogram1} {\sc S. Steinberg},\,
+in: V. E. Lewis,\, {\em Proc. of the 1979 MACSYMA User's Conference} \, 
+(MIT Press, Boston, 1979)\, p. 408
+
+\bibitem{steinbergprogram2} {\sc S. Steinberg},\,
+MACSYMA Newsletter 7 (1990) 3. 
+
+\bibitem{champagneprogram} {\sc B. Champagne} and {\sc P. Winternitz}, \,
+{\em A MACSYMA Program for Calculating the Symmetry Group of a System
+of Differential Equations}.\, Report CRM-1278 (Centre de Recherches 
+Math\'{e}matiques, Montr\'{e}al, Canada, 1985).
+
+\bibitem{rosencransprogram} {\sc S.I. Rosencrans},\,
+Comput. Phys. Comm. 38 (1985) 347.
+
+\bibitem{schwarzsizeprogram} {\sc F. Schwarz}, 
+{\em An Algorithm for Determining the Size of Symmetry Groups}, \,
+private communication (1989).
+
+\bibitem{reidprogram1} {\sc G.J. Reid}, in: V. Hussin,
+{\em Lie Theory, Differential Equations and Representation Theory}\,
+Proc. Annual Seminar of the Canadian Math. Soc. \,
+(Les Publications de Centre de Recherches Math\'{e}matiques, Montr\'{e}al, 
+Canada, 1990)\, p. 363.
+
+\bibitem{reidprogram2} {\sc G.J. Reid},
+{\em Finding symmetries of differential equations without integrating
+determining equations}, Technical Report 90-4, Inst. of Appl. Math.,
+The University of British Columbia, Vancouver, Canada, submitted to 
+European J. Appl. Math (1990).
+
+\bibitem{reidprogram3} {\sc G.J. Reid},
+{\em A Triangular Algorithm which Determines the Lie Symmetry Algebra of any
+System of PDEs}, J. Phys. A: Math. Gen. 23 (1990) to appear.
+
+\bibitem{karpman1} {\sc V.I. Karpman},\,
+Phys. Lett. A 136 (1989) 216.
+
+\end{thebibliography}
+
+% The following pages were used to generated numbered pages for the addenda
+% the actual contents of these pages has to be printed separately because
+% the files are in ASCII code and not converted into LATEX.
+
+\end{document}
+\end
+\bye
+
+\newpage % 29
+
+\section*{Test Run Output}
+
+\vfill
+\newpage % 30
+.
+\vfill
+\newpage % 31
+.
+\vfill
+\newpage % 32
+.
+\vfill
+\newpage % 33
+.
+\vfill
+\newpage % 34
+.
+\vfill
+\newpage % 35
+
+\section*{Listing of symmgrp.max}
+
+\vfill
+\newpage % 36
+.
+\vfill
+\newpage % 37
+.
+\vfill
+\newpage % 38
+.
+\vfill
+\newpage % 39
+.
+\vfill
+\newpage % 40
+.
+\vfill
+\newpage % 41
+.
+\vfill
+\newpage % 42
+.
+\vfill
+\newpage % 43
+.
+\vfill
+\newpage % 44
+.
+\vfill
+\newpage % 45
+.
+\vfill
+\newpage % 46
+.
+\vfill
+\newpage % 47
+
+\section*{Listing of printeqn.max}
+
+\vfill
+
+\end{document}
+\end
+\bye
+
+
